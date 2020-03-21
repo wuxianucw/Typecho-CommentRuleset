@@ -20,7 +20,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
         if(!is_dir(dirname(__FILE__) . '/runtime')) mkdir(dirname(__FILE__) . '/runtime');
         if(!file_exists(dirname(__FILE__) . '/runtime/ruleset.json')) touch(dirname(__FILE__) . '/runtime/ruleset.json');
         Typecho_Plugin::factory('Widget_Feedback')->comment = array('CommentRuleset_Plugin', 'filter');
-        Helper::addPanel(1, 'CommentRuleset/control-panel.php', '评论规则集', '评论规则集管理',' administrator');
+        Helper::addPanel(1, 'CommentRuleset/control-panel.php', '评论规则集', '评论规则集管理', 'administrator');
         return _t('插件启用成功，请配置评论规则集。');
     }
     
@@ -112,9 +112,12 @@ HTML
      * 评论过滤
      * 
      * @access public
-     * @return void
+     * @param array $value
+     * @param Widget_Abstract_Comments $comments
+     * @return array
      */
-    public static function filter() {
-        
+    public static function filter($value, Widget_Abstract_Comments $comments) {
+        touch(dirname(__FILE__) . '/FLAG'); // 临时：帮助我们更好地了解触发规律
+        return $value;
     }
 }
