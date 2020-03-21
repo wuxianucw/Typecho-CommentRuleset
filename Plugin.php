@@ -48,7 +48,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
     {
         $panelUrl = Helper::url('CommentRuleset/control-panel.php');
         /** MDUI 加载来源 */
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Radio('email', array(0 => '本地', 1 => 'jsDelivr'), 0, 'MDUI 加载来源', _t(<<<HTML
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Radio('mdui', array(0 => '本地', 1 => 'jsDelivr'), 0, 'MDUI 加载来源', _t(<<<HTML
             本参数用于设置评论规则集管理页面使用到的 MDUI 相关资源的加载来源，目前提供本地源和 jsDelivr 两个选项。<br>
             如果评论规则集页面加载缓慢，可以尝试更改此项目。<br>
             如果您不知道此项目的用途，保持默认即可。（反正也不影响规则集配置）<br>
@@ -65,6 +65,26 @@ HTML
      * @return void
      */
     public static function personalConfig(Typecho_Widget_Helper_Form $form) {}
+
+    /**
+     * 获取 MDUI 加载来源 结尾不含 "/"
+     * 
+     * @access public
+     * @return string
+     */
+    public static function mdui() {
+        $mdui = 0;
+        try {
+            $mdui = Helper::options()->plugin('CommentRuleset')->mdui;
+        } catch(Typecho_Plugin_Exception $e) {}
+        $mdui = intval($mdui);
+        $dist = array(
+            0 => Helper::options()->rootUrl . '/usr/plugins/CommentRuleset/mdui',
+            1 => 'https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist',
+        );
+        if(!in_array($mdui, range(0, count($dist) - 1))) $mdui = 0;
+        return $dist[$mdui];
+    }
     
     /**
      * 评论过滤
