@@ -70,9 +70,15 @@ HTML
      * 获取 MDUI 加载来源 结尾不含 "/"
      * 
      * @access public
+     * @param bool $output
      * @return string
      */
-    public static function mdui() {
+    public static function mdui($output = true) {
+        static $result = "";
+        if(!empty($result)) {
+            if($output) echo $result;
+            return $result;
+        }
         $mdui = 0;
         try {
             $mdui = Helper::options()->plugin('CommentRuleset')->mdui;
@@ -82,8 +88,24 @@ HTML
             0 => Helper::options()->rootUrl . '/usr/plugins/CommentRuleset/mdui',
             1 => 'https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist',
         );
-        if(!in_array($mdui, range(0, count($dist) - 1))) $mdui = 0;
-        return $dist[$mdui];
+        if($mdui < 0 || $mdui >= count($dist)) $mdui = 0;
+        $result = $dist[$mdui];
+        if($output) echo $result;
+        return $result;
+    }
+
+    /**
+     * 读取规则集
+     * 
+     * @access public
+     * @return array
+     */
+    public static function getRuleset() {
+        $ruleset = file_get_contents(dirname(__FILE__) . '/runtime/ruleset.json');
+        if(empty($ruleset)) return array();
+        @$ruleset = json_decode($ruleset, true);
+        if(!is_array($ruleset)) return array();
+        return $ruleset;
     }
     
     /**
