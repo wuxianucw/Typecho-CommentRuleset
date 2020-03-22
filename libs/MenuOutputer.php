@@ -6,7 +6,7 @@ if(!defined('__TYPECHO_ROOT_DIR__')) exit;
  * 由于原组件封装程度过高，对自定义 HTML 结构的支持性几乎没有，被迫制作一个适配后的副本
  * 
  * @package CommentRuleset
- * @license GNU General Public License 2.0
+ * @license GNU General Public License v2.0
  * @copyright  Copyright (c) 2008 Typecho team (http://www.typecho.org)
  */
 class CommentRuleset_MenuOutputer extends Typecho_Widget {
@@ -97,7 +97,7 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
             array(_t('控制台'), 'explore', 'blue'),
             array(_t('撰写'), 'border_color', 'orange'),
             array(_t('管理'), 'widgets', 'purple'),
-            array(_t('设置'), 'settings', 'brown')
+            array(_t('设置'), 'settings', 'black')
         );
         $childNodes =  array(
             array(),
@@ -241,11 +241,11 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
             if(!$node[1] || !$key) continue;
             if(is_array($node[0])) {
                 $title = isset($node[0][0]) ? $node[0][0] : '';
-                $icon = isset($node[0][1]) ? $node[0][1] : 'language';
+                $icon = isset($node[0][1]) ? $node[0][1] : '';
                 $color = isset($node[0][2]) ? $node[0][2] : 'black';
             } else {
                 $title = $node[0];
-                $icon = 'language';
+                $icon = '';
                 $color = 'black';
             }
             echo '                ';

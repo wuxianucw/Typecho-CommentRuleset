@@ -2,6 +2,7 @@
 if(!defined('__TYPECHO_ADMIN__')) exit;
 require_once dirname(__FILE__) . '/libs/MenuOutputer.php';
 Typecho_Widget::widget('CommentRuleset_MenuOutputer')->to($menuOutputer);
+$ruleset = CommentRuleset_Plugin::getRuleset();
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -14,12 +15,19 @@ Typecho_Widget::widget('CommentRuleset_MenuOutputer')->to($menuOutputer);
         <meta name="robots" content="noindex, nofollow">
         <link rel="stylesheet" href="<?php CommentRuleset_Plugin::mdui() ?>/css/mdui.min.css?v=0.4.3">
     </head>
-    <body class="mdui-drawer-body-left mdui-appbar-with-toolbar mdui-theme-primary-red mdui-theme-accent-light-blue">
+    <body class="mdui-drawer-body-left mdui-appbar-with-toolbar mdui-theme-primary-red mdui-theme-accent-blue">
         <header class="mdui-appbar mdui-appbar-fixed">
             <div class="mdui-toolbar mdui-color-theme">
                 <span class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-drawer="{target: '#main-drawer', swipe: true}"><i class="mdui-icon material-icons">menu</i></span>
                 <span class="mdui-typo-title"><?php $menu->title() ?></span>
                 <div class="mdui-toolbar-spacer"></div>
+                <a class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" href="<?php $options->adminUrl('profile.php'); ?>" mdui-tooltip="{content: '<?php
+                    if($user->logged > 0) {
+                        $logged = new Typecho_Date($user->logged);
+                        _e('最后登录: %s', $logged->word());
+                    }
+                    ?>'}"><i class="mdui-icon material-icons">account_circle</i></a>
+                <a class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" href="<?php $options->logoutUrl(); ?>" mdui-tooltip="{content: '登出'}"><i class="mdui-icon material-icons">exit_to_app</i></a>
                 <a href="https://github.com/wuxianucw/Typecho-CommentRuleset" target="_blank" class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" mdui-tooltip="{content: 'GitHub'}">
                     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 36 36" enable-background="new 0 0 36 36" xml:space="preserve" class="mdui-icon" style="width: 24px;height:24px;">
                         <path fill-rule="evenodd" clip-rule="evenodd" fill="#ffffff" d="M18,1.4C9,1.4,1.7,8.7,1.7,17.7c0,7.2,4.7,13.3,11.1,15.5
@@ -35,6 +43,25 @@ Typecho_Widget::widget('CommentRuleset_MenuOutputer')->to($menuOutputer);
         <div class="mdui-drawer" id="main-drawer">
             <div class="mdui-list" mdui-collapse="{accordion: true}" style="margin-bottom: 76px;">
 <?php $menuOutputer->output(); ?>
+            </div>
+        </div>
+        <div class="mdui-container">
+            <div class="mdui-typo">
+                <h3><?php _e('目前共 %d 条规则', count($ruleset)); ?></h3>
+            </div>
+            <div class="mdui-tab mdui-tab-full-width" mdui-tab>
+                <a href="#view-rules" class="mdui-ripple">规则总览</a>
+                <a href="#new-rule" class="mdui-ripple">新增规则</a>
+                <a href="#guide" class="mdui-ripple">配置指南</a>
+            </div>
+            <div id="view-rules" class="mdui-typo mdui-p-a-2">
+                暂无规则
+            </div>
+            <div id="new-rule" class="mdui-typo mdui-p-a-2">
+                当前配置不允许新增规则
+            </div>
+            <div id="guide" class="mdui-typo mdui-p-a-2">
+                配置指南
             </div>
         </div>
         <script src="<?php CommentRuleset_Plugin::mdui() ?>/js/mdui.min.js?v=0.4.3"></script>
