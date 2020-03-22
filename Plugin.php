@@ -6,6 +6,7 @@ if(!defined('__TYPECHO_ROOT_DIR__')) exit;
  * @package CommentRuleset
  * @author wuxianucw
  * @version 1.0.0
+ * @license GNU Affero General Public License v3.0
  * @link https://ucw.moe/
  */
 class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
@@ -48,7 +49,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
     {
         $panelUrl = Helper::url('CommentRuleset/control-panel.php');
         /** MDUI 加载来源 */
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Radio('mdui', array(0 => '本地', 1 => 'jsDelivr'), 0, 'MDUI 加载来源', _t(<<<HTML
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Select('mdui', array(0 => '本地', 1 => 'jsDelivr'), 0, 'MDUI 加载来源', _t(<<<HTML
             本参数用于设置评论规则集管理页面使用到的 MDUI 相关资源的加载来源，目前提供本地源和 jsDelivr 两个选项。<br>
             如果评论规则集页面加载缓慢，可以尝试更改此项目。<br>
             如果您不知道此项目的用途，保持默认即可。（反正也不影响规则集配置）<br>
