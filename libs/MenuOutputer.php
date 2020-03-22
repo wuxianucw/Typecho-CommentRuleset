@@ -268,7 +268,6 @@ HTML;
                 if($key == $this->_currentParent && $inKey == $this->_currentChild) {
                     $classes[] = $childClass;
                 } else if($inNode[6]) continue;
-                if($inKey == $last) $classes[] = 'last';
                 echo "                        ";
                 echo '<a class="' . implode(' ', $classes) . '" href="' . ($key == $this->_currentParent && $inKey == $this->_currentChild ? $this->_currentUrl : $inNode[2]) . "\">{$inNode[0]}</a>\n";
             }
