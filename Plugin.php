@@ -11,6 +11,41 @@ if(!defined('__TYPECHO_ROOT_DIR__')) exit;
  */
 class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
     /**
+     * 评论通过标志
+     * 
+     * @var int
+     */
+    const FLAG_ACCEPT = 0;
+    
+    /**
+     * 评论待审核标志
+     * 
+     * @var int
+     */
+    const FLAG_REVIEW = 1;
+
+    /**
+     * 评论垃圾标志
+     * 
+     * @var int
+     */
+    const FLAG_SPAM = 2;
+
+    /**
+     * 评论禁止标志
+     * 
+     * @var int
+     */
+    const FLAG_DENY = 3;
+
+    /**
+     * 无操作标志
+     * 
+     * @var int
+     */
+    const FLAG_SKIP = 4;
+
+    /**
      * 激活插件
      * 
      * @access public
