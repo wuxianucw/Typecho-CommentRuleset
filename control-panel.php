@@ -45,25 +45,158 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
 <?php $menuOutputer->output(); ?>
             </div>
         </div>
-        <div class="mdui-container">
-            <div class="mdui-typo">
-                <h3><?php _e('目前共 %d 条规则', count($ruleset)); ?></h3>
-            </div>
+        <div class="mdui-container" style="padding-top: 8px;">
             <div class="mdui-tab mdui-tab-full-width" mdui-tab>
                 <a href="#view-rules" class="mdui-ripple">规则总览</a>
                 <a href="#new-rule" class="mdui-ripple">新增规则</a>
                 <a href="#guide" class="mdui-ripple">配置指南</a>
             </div>
             <div id="view-rules" class="mdui-typo mdui-p-a-2">
-                暂无规则
+                <div class="mdui-card mdui-shadow-0">
+                    <div class="mdui-card-header">
+                        <div class="mdui-toolbar">
+                            <span class="mdui-typo-title"><?php _e('目前共 %d 条规则', count($ruleset)); ?></span>
+                            <div class="mdui-toolbar-spacer"></div>
+                            <button id="add-rule" class="mdui-btn mdui-btn-icon mdui-btn-raised mdui-ripple" mdui-tooltip="{content: '新增规则'}"><i class="mdui-icon material-icons">add</i></button>
+                        </div>
+                        <div class="mdui-toolbar mdui-hidden">
+                            <span class="mdui-typo-title mdui-text-color-theme-accent">选中 0 条规则</span>
+                            <div class="mdui-toolbar-spacer"></div>
+                            <span class="mdui-text-color-red-900">选中项目中包含锁定项目</span>
+                            <button id="remove-rule" class="mdui-btn mdui-btn-icon mdui-btn-raised mdui-ripple" disabled mdui-tooltip="{content: '删除规则'}"><i class="mdui-icon material-icons">delete</i></button>
+                        </div>
+                    </div>
+                    <div class="mdui-card-content">
+                        <div class="mdui-table-fluid">
+                            <table class="mdui-table mdui-table-hoverable mdui-table-selectable">
+                                <thead>
+                                    <tr>
+                                        <th>规则名称</th>
+                                        <th mdui-tooltip="{content: 'Rule Unique ID，规则唯一标识符'}">RUID</th>
+                                        <th>规则备注</th>
+                                        <th>规则状态</th>
+                                        <th class="mdui-table-col-numeric" mdui-tooltip="{content: '数值越大的规则优先级越高'}">优先级</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>演示规则1</td>
+                                        <td><code>000000</code></td>
+                                        <td><button class="mdui-btn mdui-ripple" data-content="这是一条演示规则">点击查看</button></td>
+                                        <td><i class="mdui-icon material-icons mdui-text-color-green" mdui-tooltip="{content: '生效'}">check</i><i class="mdui-icon material-icons flag-lock" mdui-tooltip="{content: '锁定'}">lock</i></td>
+                                        <td>10</td>
+                                        <td>
+                                            <button class="mdui-btn mdui-btn-icon mdui-ripple action-edit" disabled mdui-tooltip="{content: '编辑'}"><i class="mdui-icon material-icons">edit</i></button>
+                                            <button class="mdui-btn mdui-btn-icon mdui-ripple action-unlock" mdui-tooltip="{content: '解除锁定'}"><i class="mdui-icon material-icons">lock_open</i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>演示规则2</td>
+                                        <td><code>ffffff</code></td>
+                                        <td><button class="mdui-btn mdui-ripple" data-content="这是另一条演示规则">点击查看</button></td>
+                                        <td><i class="mdui-icon material-icons mdui-text-color-red" mdui-tooltip="{content: '未生效'}">clear</i><i class="mdui-icon material-icons mdui-text-color-amber" mdui-tooltip="{content: '未编译'}">error_outline</i></td>
+                                        <td>10</td>
+                                        <td>
+                                            <button class="mdui-btn mdui-btn-icon mdui-ripple action-edit" mdui-tooltip="{content: '编辑'}"><i class="mdui-icon material-icons">edit</i></button>
+                                            <button class="mdui-btn mdui-btn-icon mdui-ripple action-lock" mdui-tooltip="{content: '锁定'}"><i class="mdui-icon material-icons">lock_outline</i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="new-rule" class="mdui-typo mdui-p-a-2">
                 当前配置不允许新增规则
             </div>
             <div id="guide" class="mdui-typo mdui-p-a-2">
-                配置指南
+                <h2>教程：如何优雅地使用评论规则集 <small>文档版本：v1.0</small></h2>
+                <p>Typecho 评论规则集插件（<code>CommentRuleset</code>，后简称“插件”）是一款灵活高效的评论控制插件，其功能的灵活性使得对其的配置较为复杂。为了一定程度上排除这款插件在使用上的疑难，同时对插件用法作出一定的指导，笔者特地撰写此教程，以便插件强大的功能得到合适的使用。</p>
+                <h3>基础玩法 <small>快速入门</small></h3>
+                <p>如果您对插件启用、禁用、增删规则等操作比较熟悉，可以跳过这部分内容。（话说能看到此文就说明插件已经成功启用了吧……）</p>
+                <p>首先让我们了解一下插件的目录结构：</p>
+                <pre><code>CommentRuleset
+├───libs
+├───mdui
+└───runtime</code></pre>
+                <p>其中 <code>libs</code> 和 <code>mdui</code> 目录是固有的，运行时不会被修改；<code>runtime</code> 目录是动态生成的，<strong>必须可写且可执行</strong>，将会存放插件的一些必要数据。</p>
+                <p><strong>请注意：在插件处于启用状态时，笔者不建议在任何情况下修改或删除插件目录中的文件。</strong></p>
+                <p><code>libs</code> 目录用于存放插件用到的额外 PHP 库。其中 <code>MenuOutputer.php</code> 是笔者在 Typecho 原生后台菜单输出组件的基础上编写的用于适配 MDUI 的菜单输出组件，按照 Typecho 的要求以 <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank">GNU General Public License v2.0</a> 进行许可；<code>RuleCompiler.php</code> 是笔者编写的一个将笔者设计的“规则语言”编译到 PHP 的小型编译器（当然，没有什么特别复杂的结构，只是一个简单的工具库），以 <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License v3.0</a> 进行许可。</p>
+                <p><code>mdui</code> 目录用于存放本地 MDUI 库，该库以 <a href="https://mit-license.org/" target="_blank">MIT License</a> 进行许可。</p>
+                <p>下面重点介绍 <code>runtime</code> 目录中的文件组成。</p>
+                <p>全新安装的插件在启用前并不存在 <code>runtime</code> 目录，启用插件时，插件将会自动创建这个目录以及目录下的 <code>ruleset.php</code> 规则集索引文件。规则集索引文件用于保存当前情况下的整个规则列表。</p>
+                <p>编译规则后，目录下会生成相应的 <code>rule_<span style="padding: 2px;background-color: #e8eaf6;" mdui-tooltip="{content: 'RUID'}">xxxxxx</span>.php</code>；如果存在生效的规则，还会生成 <code>rules.php</code>，用于运行时的快速判断。</p>
+                <p>这里第一次出现了 RUID 的概念，它的全称是 Rule Unique ID，即规则唯一标识符，是一个字母全部小写的 6 位十六进制数，采用随机的方法生成，用于标识规则。</p>
+                <p><strong>再次强调：绝对不要手动修改或删除 <code>runtime</code> 目录下的任何文件！这样做的后果很可能是灾难性的！</strong></p>
+                <h3>进阶指导 <small>这才是常规操作</small></h3>
+                <p>这部分可以介绍比较复杂的规则……</p>
+                <h3>高级技巧 <small>Let's Speed Up!</small></h3>
+                <p>这里介绍 Rule 语法以及编译器相关……</p>
+                <h3>疑难解答 <small>好像有哪里不对</small></h3>
+                <p>如果您在使用过程中遇到了问题，这部分内容可能会有所帮助。如果您无法在这里找到答案，可以<a href="https://github.com/wuxianucw/Typecho-CommentRuleset/issues" target="_blank">在 GitHub 上提出 issue</a>。</p>
+                <h4>常见问题 <small>Q&amp;A</small></h4>
+                <p>如标题所述，是一个Q&amp;A内容。</p>
+                <h4>编译错误参考 <small>解析时遇到了雾之湖的妖精</small></h4>
+                <p>如标题所述，是一个编译错误参考。</p>
             </div>
         </div>
         <script src="<?php CommentRuleset_Plugin::mdui() ?>/js/mdui.min.js?v=0.4.3"></script>
+        <script>
+            var $$ = mdui.JQ;
+            $$(function() {
+                $$('button#add-rule').on('click', function() {
+                    mdui.Tab('.mdui-container>.mdui-tab').show(1);
+                });
+                $$('button#remove-rule').on('click', function() {
+                    mdui.confirm('确定要删除这些规则吗？该操作不可逆！', '提示', function() {
+                        mdui.alert('当前配置不允许删除！', '错误', function() {}, {confirmText: '确定'});
+                    }, function() {}, {confirmText: '确定', cancelText: '取消'});
+                })
+                $$('button.action-edit').on('click', function() {
+                    mdui.alert('当前配置不允许编辑！', '错误', function() {}, {confirmText: '确定'});
+                });
+                $$('button.action-lock').on('click', function() {
+                    var e = this;
+                    mdui.confirm('确定要锁定该规则吗？处于锁定状态的规则不能被删除或编辑！', '提示', function() {
+                        console.log(e);
+                    }, function() {}, {confirmText: '确定', cancelText: '取消'});
+                });
+                $$('button.action-unlock').on('click', function() {
+                    var e = this;
+                    mdui.confirm('确定要解除锁定该规则吗？解除锁定后的规则将可以被删除或编辑！', '提示', function() {
+                        console.log(e);
+                    }, function() {}, {confirmText: '确定', cancelText: '取消'});
+                });
+                $$('#view-rules .mdui-table tbody>tr>td:nth-child(4)>button').on('click', function() {
+                    mdui.dialog({
+                        title: '规则备注',
+                        content: $$(this).data('content'),
+                        buttons: [{text: '关闭'}]
+                    });
+                });
+                $$('#view-rules .mdui-table tr .mdui-checkbox>input[type=checkbox]').on('change', function() {
+                    var $normal = $$('#view-rules .mdui-card-header .mdui-toolbar:nth-child(1)');
+                    var $accent = $$('#view-rules .mdui-card-header .mdui-toolbar:nth-child(2)');
+                    var $selected = $$('#view-rules .mdui-table tbody tr.mdui-table-row-selected');
+                    if($selected.length > 0) {
+                        $accent.find('.mdui-typo-title:nth-child(1)').text(`选中 ${$selected.length} 条规则`);
+                        if($selected.find('.flag-lock').length > 0) {
+                            $accent.find('#remove-rule').prop('disabled', true);
+                            $accent.find('.mdui-text-color-red-900').removeClass('mdui-hidden');
+                        } else {
+                            $accent.find('#remove-rule').prop('disabled', false);
+                            $accent.find('.mdui-text-color-red-900').addClass('mdui-hidden');
+                        }
+                        $normal.addClass('mdui-hidden');
+                        $accent.removeClass('mdui-hidden');
+                    } else {
+                        $accent.addClass('mdui-hidden');
+                        $normal.removeClass('mdui-hidden');
+                    }
+                });
+            });
+        </script>
     </body>
 </html>
