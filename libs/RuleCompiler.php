@@ -155,6 +155,11 @@ class Exception extends \Exception {}
  * 运算符处理类
  */
 class Operator {
+    /**
+     * 运算符表
+     * 
+     * @var array
+     */
     const OPTRS = array('==', '!=', '<', '>', '<=', '>=', '<-', '~');
 
     /**
@@ -187,7 +192,7 @@ class ASTNode {
      * 父节点
      * 
      * @access public
-     * @var ASTNode
+     * @var \CommentRuleset\ASTNode
      */
     public $parent;
 
@@ -204,7 +209,7 @@ class Root extends ASTNode {
      * 下级 Judge
      * 
      * @access public
-     * @var Judge
+     * @var \CommentRuleset\Judge
      */
     public $judge;
 
@@ -218,7 +223,6 @@ class Root extends ASTNode {
 
     public function __construct() {
         parent::__construct();
-        $this->count = 0;
         $this->judge = null;
         $this->pos = 1;
     }
@@ -235,6 +239,8 @@ class Root extends ASTNode {
 class Judge extends ASTNode {
     /**
      * 合法 name 列表
+     * 
+     * @var array
      */
     const NAMES = array('uid', 'nick', 'email', 'url', 'content', 'ip', 'ua');
 
@@ -250,7 +256,7 @@ class Judge extends ASTNode {
      * 运算符
      * 
      * @access public
-     * @var Operator
+     * @var \CommentRuleset\Operator
      */
     public $optr;
 
@@ -307,7 +313,7 @@ class Judge extends ASTNode {
     }
 
     public function name($name) {
-        if(!in_array($name, self::NAMES)) throw new Exception('无法识别的标识名称 <code>' . htmlspecialchars($name) . '</code>。');
+        if(!in_array($name, self::NAMES)) throw new Exception('解析时遇到了无法识别的名称 <code>' . htmlspecialchars($name) . '</code>。');
         $this->name = $name;
     }
 
@@ -333,6 +339,13 @@ class Judge extends ASTNode {
  */
 class Value extends ASTNode {
     /**
+     * signal 表
+     * 
+     * @var array
+     */
+    const SIGNALS = array('accept', 'review', 'spam', 'deny');
+
+    /**
      * 类型
      * 
      * @access public
@@ -351,6 +364,7 @@ class Value extends ASTNode {
     public function set($value) {
         $intval = intval($value);
         if(!$intval && $value !== '0') {
+            if(!in_array($value, self::SIGNALS)) throw new Exception('解析时遇到了无法识别的标识 <code>' . htmlspecialchars($value) . '</code>。');
             $this->type = 'signal';
             $this->value = $value;
         } else {

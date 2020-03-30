@@ -54,9 +54,10 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      */
     public static function activate() {
         if(!is_dir(dirname(__FILE__) . '/runtime')) mkdir(dirname(__FILE__) . '/runtime');
-        if(!file_exists(dirname(__FILE__) . '/runtime/ruleset.json')) touch(dirname(__FILE__) . '/runtime/ruleset.json');
+        if(!file_exists(dirname(__FILE__) . '/runtime/ruleset.php')) touch(dirname(__FILE__) . '/runtime/ruleset.php');
         Typecho_Plugin::factory('Widget_Feedback')->comment = array('CommentRuleset_Plugin', 'filter');
         Helper::addPanel(1, 'CommentRuleset/control-panel.php', '评论规则集', '评论规则集管理', 'administrator');
+        Helper::addAction('config-commentruleset', 'CommentRuleset_Action');
         return _t('插件启用成功，请配置评论规则集。');
     }
     
@@ -70,6 +71,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      */
     public static function deactivate() {
         Helper::removePanel(1, 'CommentRuleset/control-panel.php');
+        Helper::removeAction('config-commentruleset');
         return _t('插件已禁用，已保存的规则集自动失效但并未删除。');
     }
     
@@ -137,11 +139,24 @@ HTML
      * @return array
      */
     public static function getRuleset() {
-        $ruleset = file_get_contents(dirname(__FILE__) . '/runtime/ruleset.json');
-        if(empty($ruleset)) return array();
-        @$ruleset = json_decode($ruleset, true);
+        require dirname(__FILE__) . '/runtime/ruleset.php';
+        if(!isset($ruleset)) return array();
+        $ruleset = unserialize($ruleset);
         if(!is_array($ruleset)) return array();
         return $ruleset;
+    }
+
+    /**
+     * 保存规则集
+     * 
+     * @access public
+     * @param array $ruleset
+     * @return void
+     */
+    public static function saveRuleset($ruleset) {
+        file_put_contents(dirname(__FILE__) . '/runtime/ruleset.php',
+            "<?php\nif(!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
+            . str_replace(array('\\', '\''), array('\\\\', '\\\''), serialize($ruleset)) . "';\n");
     }
     
     /**
