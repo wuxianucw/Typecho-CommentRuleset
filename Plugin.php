@@ -57,7 +57,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
         if(!file_exists(dirname(__FILE__) . '/runtime/ruleset.php')) touch(dirname(__FILE__) . '/runtime/ruleset.php');
         Typecho_Plugin::factory('Widget_Feedback')->comment = array('CommentRuleset_Plugin', 'filter');
         Helper::addPanel(1, 'CommentRuleset/control-panel.php', '评论规则集', '评论规则集管理', 'administrator');
-        Helper::addAction('config-commentruleset', 'CommentRuleset_Action');
+        Helper::addAction('manage-commentruleset', 'CommentRuleset_Action');
         return _t('插件启用成功，请配置评论规则集。');
     }
     
@@ -71,7 +71,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      */
     public static function deactivate() {
         Helper::removePanel(1, 'CommentRuleset/control-panel.php');
-        Helper::removeAction('config-commentruleset');
+        Helper::removeAction('manage-commentruleset');
         return _t('插件已禁用，已保存的规则集自动失效但并未删除。');
     }
     
