@@ -242,7 +242,7 @@ class Judge extends ASTNode {
      * 
      * @var array
      */
-    const NAMES = array('uid', 'nick', 'email', 'url', 'content', 'ip', 'ua');
+    const NAMES = array('uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua');
 
     /**
      * 判断标识

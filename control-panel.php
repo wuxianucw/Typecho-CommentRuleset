@@ -179,6 +179,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                 <option value="email">邮箱</option>
                                 <option value="url">个人主页</option>
                                 <option value="content">评论内容</option>
+                                <option value="length">评论有效长度</option>
                                 <option value="ip">IP</option>
                                 <option value="ua">User-Agent</option>
                             </select>
@@ -326,7 +327,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 });
                 const onNameChange = function() {
                     var $optr, $target;
-                    if($$(this).val() == 'uid') {
+                    if($$(this).val() == 'uid' || $$(this).val() == 'length') {
                         $optr = $$(this).parent().find('.judge-optr').html(`
                             <option value="==">等于</option>
                             <option value="!=">不等于</option>
@@ -376,6 +377,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                             <option value="email">邮箱</option>
                                             <option value="url">个人主页</option>
                                             <option value="content">评论内容</option>
+                                            <option value="length">评论有效长度</option>
                                             <option value="ip">IP</option>
                                             <option value="ua">User-Agent</option>
                                         </select>
