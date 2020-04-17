@@ -167,6 +167,11 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     <textarea class="mdui-textfield-input" name="desc"></textarea>
                     <div class="mdui-textfield-helper">可以为空，允许多行</div>
                 </div>
+                <div class="mdui-textfield">
+                    <label class="mdui-textfield-label">规则优先级</label>
+                    <input class="mdui-textfield-input" name="priority" type="text" value="10" pattern="^(0|[1-9][0-9]{0,4})$" required>
+                    <div class="mdui-textfield-error">请输入一个 0 到 99999 范围内的整数</div>
+                </div>
                 <label class="mdui-textfield-label">规则内容</label>
                 <div class="judge-block" data-flag="#Main">
                     <div class="judge-block-label">#Main</div>
@@ -288,13 +293,13 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 });
                 $$('button.action-lock').on('click', function() {
                     var e = this;
-                    mdui.confirm('确定要锁定该规则吗？处于锁定状态的规则不能被删除或编辑！', '提示', function() {
+                    mdui.confirm('确定要锁定该规则吗？处于锁定状态的规则不能被编辑或删除！', '提示', function() {
                         console.log(e);
                     }, function() {}, {confirmText: '确定', cancelText: '取消'});
                 });
                 $$('button.action-unlock').on('click', function() {
                     var e = this;
-                    mdui.confirm('确定要解除锁定该规则吗？解除锁定后的规则将可以被删除或编辑！', '提示', function() {
+                    mdui.confirm('确定要解除锁定该规则吗？解除锁定后的规则将可以被编辑或删除！', '提示', function() {
                         console.log(e);
                     }, function() {}, {confirmText: '确定', cancelText: '取消'});
                 });
