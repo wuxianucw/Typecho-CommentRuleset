@@ -1,5 +1,5 @@
 <?php
-if(!defined('__TYPECHO_ADMIN__')) exit;
+if (!defined('__TYPECHO_ADMIN__')) exit;
 require_once dirname(__FILE__) . '/libs/MenuOutputer.php';
 Typecho_Widget::widget('CommentRuleset_MenuOutputer')->to($menuOutputer);
 $ruleset = CommentRuleset_Plugin::getRuleset();
@@ -70,7 +70,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 <span class="mdui-typo-title"><?php $menu->title() ?></span>
                 <div class="mdui-toolbar-spacer"></div>
                 <a class="mdui-btn mdui-btn-icon mdui-ripple mdui-ripple-white" href="<?php $options->adminUrl('profile.php'); ?>" mdui-tooltip="{content: '<?php
-                    if($user->logged > 0) {
+                    if ($user->logged > 0) {
                         $logged = new Typecho_Date($user->logged);
                         _e('最后登录: %s', $logged->word());
                     }
@@ -268,16 +268,16 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
             $$.extend({
                 randomFlag() {
                     var res = '#';
-                    for(var i = 0; i < 6; i++) res += Math.floor(Math.random() * 16).toString(16);
+                    for (var i = 0; i < 6; i++) res += Math.floor(Math.random() * 16).toString(16);
                     return res.toUpperCase();
                 }
             });
             $$.fn.extend({
                 removeBlock() {
-                    if(this.data('flag') == '') return;
+                    if (this.data('flag') == '') return;
                     var $then = this.find('.judge-then-pos'), $else = this.find('.judge-else-pos');
-                    if(!$then.parent().hasClass('mdui-hidden')) $$(`div[data-flag="${$then.text()}"]`).removeBlock();
-                    if(!$else.parent().hasClass('mdui-hidden')) $$(`div[data-flag="${$else.text()}"]`).removeBlock();
+                    if (!$then.parent().hasClass('mdui-hidden')) $$(`div[data-flag="${$then.text()}"]`).removeBlock();
+                    if (!$else.parent().hasClass('mdui-hidden')) $$(`div[data-flag="${$else.text()}"]`).removeBlock();
                     this.remove();
                     return;
                 }
@@ -317,9 +317,9 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     var $normal = $$('#view-rules .mdui-card-header .mdui-toolbar:nth-child(1)');
                     var $accent = $$('#view-rules .mdui-card-header .mdui-toolbar:nth-child(2)');
                     var $selected = $$('#view-rules .mdui-table tbody tr.mdui-table-row-selected');
-                    if($selected.length > 0) {
+                    if ($selected.length > 0) {
                         $accent.find('.mdui-typo-title:nth-child(1)').text(`选中 ${$selected.length} 条规则`);
-                        if($selected.find('.flag-lock').length > 0) {
+                        if ($selected.find('.flag-lock').length > 0) {
                             $accent.find('#remove-rule').prop('disabled', true);
                             $accent.find('.mdui-text-color-red-900').removeClass('mdui-hidden');
                         } else {
@@ -335,7 +335,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 });
                 const onNameChange = function() {
                     var $optr, $target;
-                    if($$(this).val() == 'uid' || $$(this).val() == 'length') {
+                    if ($$(this).val() == 'uid' || $$(this).val() == 'length') {
                         $optr = $$(this).parent().find('.judge-optr').html(`
                             <option value="==">等于</option>
                             <option value="!=">不等于</option>
@@ -367,8 +367,8 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     var type = $$(this).hasClass('judge-then') ? 'then' : 'else';
                     var $mark = $$(this).parent().find(`.judge-${type}-pos`);
                     var hidden = $mark.parent().hasClass('mdui-hidden');
-                    if($$(this).val() == 'judge') {
-                        if(!hidden) return;
+                    if ($$(this).val() == 'judge') {
+                        if (!hidden) return;
                         var pos = $$.randomFlag();
                         var flag = $$(this).parentsUntil('.judge-block').last().parent().data('flag');
                         var $pos = $$('#new-rule .judge-addition').append(`
@@ -446,7 +446,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                             }, 1000)();
                         });
                         $mark.parent().removeClass('mdui-hidden');
-                    } else if(!hidden) {
+                    } else if (!hidden) {
                         $$(`div.judge-block[data-flag="${$mark.text()}"]`).removeBlock();
                         $mark.text('').off('click');
                         $mark.parent().addClass('mdui-hidden');

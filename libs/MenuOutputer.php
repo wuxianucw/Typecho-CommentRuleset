@@ -1,5 +1,5 @@
 <?php
-if(!defined('__TYPECHO_ROOT_DIR__')) exit;
+if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * Typecho 评论规则集插件 后台菜单输出器
  * 参考：Widget_Menu
@@ -142,63 +142,63 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
         $defaultChildeNode = array(NULL, NULL, NULL, 'administrator', false, NULL);
         $currentUrlParts = parse_url($currentUrl);
         $currentUrlParams = array();
-        if(!empty($currentUrlParts['query'])) parse_str($currentUrlParts['query'], $currentUrlParams);
-        if('/' == $currentUrlParts['path'][strlen($currentUrlParts['path']) - 1]) $currentUrlParts['path'] .= 'index.php';
-        foreach($extendingParentMenu as $key => $val) {
+        if (!empty($currentUrlParts['query'])) parse_str($currentUrlParts['query'], $currentUrlParams);
+        if ('/' == $currentUrlParts['path'][strlen($currentUrlParts['path']) - 1]) $currentUrlParts['path'] .= 'index.php';
+        foreach ($extendingParentMenu as $key => $val) {
             $parentNodes[10 + $key] = $val;
         }
-        foreach($extendingChildMenu as $key => $val) {
+        foreach ($extendingChildMenu as $key => $val) {
             $childNodes[$key] = array_merge(isset($childNodes[$key]) ? $childNodes[$key] : array(), $val);
         }
-        foreach($parentNodes as $key => $parentNode) {
+        foreach ($parentNodes as $key => $parentNode) {
             $children = array();
             $showedChildrenCount = 0;
             $firstUrl = NULL;
-            foreach($childNodes[$key] as $inKey => $childNode) {
+            foreach ($childNodes[$key] as $inKey => $childNode) {
                 $childNode += $defaultChildeNode;
                 list($name, $title, $url, $access, $hidden, $addLink) = $childNode;
                 $orgHidden = $hidden;
                 $url = Typecho_Common::url($url, $adminUrl);
                 $urlParts = parse_url($url);
                 $urlParams = array();
-                if(!empty($urlParts['query'])) parse_str($urlParts['query'], $urlParams);
+                if (!empty($urlParts['query'])) parse_str($urlParts['query'], $urlParams);
                 $validate = true;
-                if($urlParts['path'] != $currentUrlParts['path']) {
+                if ($urlParts['path'] != $currentUrlParts['path']) {
                     $validate = false;
                 } else {
-                    foreach($urlParams as $paramName => $paramValue) {
-                        if(!isset($currentUrlParams[$paramName])) {
+                    foreach ($urlParams as $paramName => $paramValue) {
+                        if (!isset($currentUrlParams[$paramName])) {
                             $validate = false;
                             break;
                         }
                     }
                 }
-                if($validate
+                if ($validate
                     && basename($urlParts['path']) == 'extending.php'
                     && !empty($currentUrlParams['panel']) && !empty($urlParams['panel'])
                     && $urlParams['panel'] != $currentUrlParams['panel']){
                     $validate = false;
                 }
-                if($hidden && $validate) $hidden = false;
-                if(!$hidden && !$this->user->pass($access, true)) $hidden = true;
-                if(!$hidden) {
+                if ($hidden && $validate) $hidden = false;
+                if (!$hidden && !$this->user->pass($access, true)) $hidden = true;
+                if (!$hidden) {
                     $showedChildrenCount++;
-                    if(empty($firstUrl)) $firstUrl = $url;
-                    if(is_array($name)) {
+                    if (empty($firstUrl)) $firstUrl = $url;
+                    if (is_array($name)) {
                         list($widget, $method) = $name;
                         $name = Typecho_Widget::widget($widget)->$method();
                     }
-                    if(is_array($title)) {
+                    if (is_array($title)) {
                         list($widget, $method) = $title;
                         $title = Typecho_Widget::widget($widget)->$method();
                     }
-                    if(is_array($addLink)) {
+                    if (is_array($addLink)) {
                         list($widget, $method) = $addLink;
                         $addLink = Typecho_Widget::widget($widget)->$method();
                     }
                 }
-                if($validate) {
-                    if('visitor' != $access) $this->user->pass($access);
+                if ($validate) {
+                    if ('visitor' != $access) $this->user->pass($access);
                     $this->_currentParent = $key;
                     $this->_currentChild = $inKey;
                     $this->title = $title;
@@ -237,9 +237,9 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
      * @return string
      */
     public function output($class = 'mdui-collapse-item-open', $childClass = 'mdui-list-item-active') {
-        foreach($this->_menu as $key => $node) {
-            if(!$node[1] || !$key) continue;
-            if(is_array($node[0])) {
+        foreach ($this->_menu as $key => $node) {
+            if (!$node[1] || !$key) continue;
+            if (is_array($node[0])) {
                 $title = isset($node[0][0]) ? $node[0][0] : '';
                 $icon = isset($node[0][1]) ? $node[0][1] : '';
                 $color = isset($node[0][2]) ? $node[0][2] : 'black';
@@ -259,15 +259,15 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
                     <div class="mdui-collapse-item-body mdui-list">\n
 HTML;
             $last = 0;
-            foreach($node[3] as $inKey => $inNode) {
-                if(!$inNode[4]) $last = $inKey;
+            foreach ($node[3] as $inKey => $inNode) {
+                if (!$inNode[4]) $last = $inKey;
             }
-            foreach($node[3] as $inKey => $inNode) {
-                if($inNode[4]) continue;
+            foreach ($node[3] as $inKey => $inNode) {
+                if ($inNode[4]) continue;
                 $classes = array('mdui-list-item', 'mdui-ripple');
-                if($key == $this->_currentParent && $inKey == $this->_currentChild) {
+                if ($key == $this->_currentParent && $inKey == $this->_currentChild) {
                     $classes[] = $childClass;
-                } else if($inNode[6]) continue;
+                } elseif ($inNode[6]) continue;
                 echo "                        ";
                 echo '<a class="' . implode(' ', $classes) . '" href="' . ($key == $this->_currentParent && $inKey == $this->_currentChild ? $this->_currentUrl : $inNode[2]) . "\">{$inNode[0]}</a>\n";
             }

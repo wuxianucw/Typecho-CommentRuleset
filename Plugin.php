@@ -1,5 +1,5 @@
 <?php
-if(!defined('__TYPECHO_ROOT_DIR__')) exit;
+if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * Typecho 评论规则集插件
  * 
@@ -53,8 +53,8 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      * @throws Typecho_Plugin_Exception
      */
     public static function activate() {
-        if(!is_dir(dirname(__FILE__) . '/runtime')) mkdir(dirname(__FILE__) . '/runtime');
-        if(!file_exists(dirname(__FILE__) . '/runtime/ruleset.php')) touch(dirname(__FILE__) . '/runtime/ruleset.php');
+        if (!is_dir(dirname(__FILE__) . '/runtime')) mkdir(dirname(__FILE__) . '/runtime');
+        if (!file_exists(dirname(__FILE__) . '/runtime/ruleset.php')) touch(dirname(__FILE__) . '/runtime/ruleset.php');
         Typecho_Plugin::factory('Widget_Feedback')->comment = array('CommentRuleset_Plugin', 'render');
         Helper::addPanel(1, 'CommentRuleset/control-panel.php', '评论规则集', '评论规则集管理', 'administrator');
         Helper::addAction('manage-commentruleset', 'CommentRuleset_Action');
@@ -113,8 +113,8 @@ HTML
      */
     public static function mdui($output = true) {
         static $result = "";
-        if(!empty($result)) {
-            if($output) echo $result;
+        if (!empty($result)) {
+            if ($output) echo $result;
             return $result;
         }
         $mdui = 0;
@@ -126,9 +126,9 @@ HTML
             0 => Helper::options()->rootUrl . '/usr/plugins/CommentRuleset/mdui',
             1 => 'https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist',
         );
-        if($mdui < 0 || $mdui >= count($dist)) $mdui = 0;
+        if ($mdui < 0 || $mdui >= count($dist)) $mdui = 0;
         $result = $dist[$mdui];
-        if($output) echo $result;
+        if ($output) echo $result;
         return $result;
     }
 
@@ -140,9 +140,9 @@ HTML
      */
     public static function getRuleset() {
         require dirname(__FILE__) . '/runtime/ruleset.php';
-        if(!isset($ruleset)) return array();
+        if (!isset($ruleset)) return array();
         $ruleset = unserialize($ruleset);
-        if(!is_array($ruleset)) return array();
+        if (!is_array($ruleset)) return array();
         return $ruleset;
     }
 
@@ -155,7 +155,7 @@ HTML
      */
     public static function saveRuleset($ruleset) {
         file_put_contents(dirname(__FILE__) . '/runtime/ruleset.php',
-            "<?php\nif(!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
+            "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
             . str_replace(array('\\', '\''), array('\\\\', '\\\''), serialize($ruleset)) . "';\n");
     }
     
