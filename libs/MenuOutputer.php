@@ -182,7 +182,7 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
                 if($hidden && $validate) $hidden = false;
                 if(!$hidden && !$this->user->pass($access, true)) $hidden = true;
                 if(!$hidden) {
-                    $showedChildrenCount ++;
+                    $showedChildrenCount++;
                     if(empty($firstUrl)) $firstUrl = $url;
                     if(is_array($name)) {
                         list($widget, $method) = $name;

@@ -247,6 +247,9 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 <p>编译规则后，目录下会生成相应的 <code>rule_<span style="padding: 2px;background-color: #e8eaf6;" mdui-tooltip="{content: 'RUID'}">xxxxxx</span>.php</code>；如果存在生效的规则，还会生成 <code>rules.php</code>，用于运行时的快速判断。</p>
                 <p>这里第一次出现了 RUID 的概念，它的全称是 Rule Unique ID，即规则唯一标识符，是一个字母全部小写的 6 位十六进制数，采用随机的方法生成，用于标识规则。</p>
                 <p><strong>再次强调：绝对不要手动修改或删除 <code>runtime</code> 目录下的任何文件！这样做的后果很可能是灾难性的！</strong></p>
+                <div class="mdui-divider-inset"></div>
+                <p></p>
+                <p>了解一些基本概念后，我们来尝试新增一条规则。</p>
                 <h3>进阶指导 <small>这才是常规操作</small></h3>
                 <p>这部分可以介绍比较复杂的规则……</p>
                 <h3>高级技巧 <small>Let's Speed Up!</small></h3>
@@ -265,7 +268,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
             $$.extend({
                 randomFlag() {
                     var res = '#';
-                    for(var i = 0; i < 6; i ++) res += Math.floor(Math.random() * 16).toString(16);
+                    for(var i = 0; i < 6; i++) res += Math.floor(Math.random() * 16).toString(16);
                     return res.toUpperCase();
                 }
             });
