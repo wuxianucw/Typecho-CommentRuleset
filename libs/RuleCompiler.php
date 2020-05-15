@@ -533,6 +533,9 @@ class Regex extends Value {
     }
 }
 
+/**
+ * 翻译器抽象类
+ */
 abstract class Translator {
     /**
      * 进入节点前
@@ -577,6 +580,9 @@ abstract class Translator {
     abstract public function nodeEndToken($node);
 }
 
+/**
+ * PHP 翻译器
+ */
 class PhpTranslator extends Translator {
     public function nodeStartToken($node) {
         $result = '';
