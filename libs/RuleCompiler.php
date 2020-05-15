@@ -1,6 +1,6 @@
 <?php
 namespace CommentRuleset;
-if(!defined('__TYPECHO_ROOT_DIR__')) exit;
+if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * Typecho 评论规则集插件 规则编译器
  * 
@@ -18,6 +18,10 @@ class RuleCompiler {
      * @var \CommentRuleset\Root
      */
     protected $_ast;
+
+    function __construct() {
+        $this->_ast = null;
+    }
 
     /**
      * 解析规则
@@ -43,77 +47,77 @@ class RuleCompiler {
         $ast = new Root(); // 抽象语法树
         $node = $ast; // 当前操作的节点
         $eor = false; // end of rule 标志
-        foreach($rule as $line) {
+        foreach ($rule as $line) {
             $line .= "\n"; // 补上行尾
             $len = strlen($line);
-            for($i = 0; $i < $len; $i ++) {
-                if($expect == '') {
-                    if($line[$i] == '#') break; // 跳过注释
-                    if(strpos(" \t\n\r\x0B\0", $line[$i]) !== false) continue; // 没有 expect 时空白字符一定可以忽略
-                    if($eor) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code，期望 <code>EOF</code>。');
-                    if($line[$i] == '[') {
-                        if($reading != '' || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+            for ($i = 0; $i < $len; $i++) {
+                if ($expect == '') {
+                    if ($line[$i] == '#') break; // 跳过注释
+                    if (strpos(" \t\n\r\x0B\0", $line[$i]) !== false) continue; // 没有 expect 时空白字符一定可以忽略
+                    if ($eor) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code，期望 <code>EOF</code>。');
+                    if ($line[$i] == '[') {
+                        if ($reading != '' || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
                         $method = $node->pos == 1 ? 'then' : 'else';
                         $child = new Judge();
                         $node->$method($child);
                         $node = $child;
-                    } elseif($line[$i] == ']') {
-                        if($node instanceof Value) {
-                            if($reading != '') throw new Exception('解析时遇到了无法识别的结构。');
+                    } elseif ($line[$i] == ']') {
+                        if ($node instanceof Value) {
+                            if ($reading != '') throw new Exception('解析时遇到了无法识别的结构。');
                             $node = $node->parent;
-                        } elseif($node instanceof Judge) {
-                            if($reading == '') throw new Exception('解析时遇到了意外的 <code>]</code>。');
+                        } elseif ($node instanceof Judge) {
+                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>]</code>。');
                             $child = new Value();
                             $child->set($reading);
-                            if($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构。');
+                            if ($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构。');
                             $node->target($child);
                         } else throw new Exception('解析时遇到了意外的 <code>]</code>。');
                         $reading = '';
-                    } elseif($line[$i] == ':') {
-                        if(!$node instanceof Judge || $node->then != null || $reading != '') throw new Exception('解析时遇到了意外的 <code>:</code>。');
+                    } elseif ($line[$i] == ':') {
+                        if (!$node instanceof Judge || $node->then != null || $reading != '') throw new Exception('解析时遇到了意外的 <code>:</code>。');
                         $node->pos = 1;
-                    } elseif($line[$i] == '!') {
-                        if(!$node instanceof Judge || $node->else != null) throw new Exception('解析时遇到了意外的 <code>!</code>。');
-                        if($reading != '' && $node->pos == 1) {
+                    } elseif ($line[$i] == '!') {
+                        if (!$node instanceof Judge || $node->else != null) throw new Exception('解析时遇到了意外的 <code>!</code>。');
+                        if ($reading != '' && $node->pos == 1) {
                             $child = new Value();
                             $child->set($reading);
-                            if($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。');
+                            if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。');
                             $node->then($child);
                             $reading = '';
                         } else throw new Exception('解析时遇到了意外的 <code>!</code>。');
                         $node->pos = 2;
-                    } elseif($line[$i] == ';') {
-                        if(!$node instanceof Judge || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>;</code>。');
-                        if($reading != '') {
+                    } elseif ($line[$i] == ';') {
+                        if (!$node instanceof Judge || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>;</code>。');
+                        if ($reading != '') {
                             $method = $node->pos == 1 ? 'then' : 'else';
-                            if($node->$method != null) throw new Exception('解析时遇到了无法识别的结构。');
+                            if ($node->$method != null) throw new Exception('解析时遇到了无法识别的结构。');
                             $child = new Value();
                             $child->set($reading);
-                            if($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构 <code>' . htmlspecialchars($reading) . ';</code>。');
+                            if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构 <code>' . htmlspecialchars($reading) . ';</code>。');
                             $node->$method($child);
                             $reading = '';
                         }
-                        if(!$node->isLegal()) throw new Exception('解析时遇到了意外的 <code>;</code>。');
+                        if (!$node->isLegal()) throw new Exception('解析时遇到了意外的 <code>;</code>。');
                         $node = $node->parent;
-                        if($node instanceof Root) $eor = true;
-                    } elseif($node instanceof Judge && $node->pos == 0 && in_array($line[$i], $special_flag)) {
+                        if ($node instanceof Root) $eor = true;
+                    } elseif ($node instanceof Judge && $node->pos == 0 && in_array($line[$i], $special_flag)) {
                         $optr = false;
-                        if($node->target != null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        if(($node->optr != null && $reading != '') || ($node->optr == null && $reading == '')) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        if($reading != '') $node->optr($reading);
+                        if ($node->target != null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if (($node->optr != null && $reading != '') || ($node->optr == null && $reading == '')) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if ($reading != '') $node->optr($reading);
                         $reading = '';
-                        if($node->name == '' || $node->optr == null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if ($node->name == '' || $node->optr == null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
                         $expect = $line[$i];
                         $child = new $special[$expect]();
                         $node->target($child);
                         $node = $child;
-                    } elseif($optr == false && $node instanceof Judge && $node->pos == 0 && strpos($optr_flag, $line[$i]) !== false) {
-                        if($node->name != '' || $reading == '') throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        if($node->optr != null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                    } elseif ($optr == false && $node instanceof Judge && $node->pos == 0 && strpos($optr_flag, $line[$i]) !== false) {
+                        if ($node->name != '' || $reading == '') throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if ($node->optr != null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
                         $node->name($reading);
                         $reading = $line[$i];
                         $optr = true;
-                    } elseif($optr && strpos($optr_flag, $line[$i]) === false) {
+                    } elseif ($optr && strpos($optr_flag, $line[$i]) === false) {
                         $optr = false;
                         $node->optr($reading);
                         $reading = $line[$i];
@@ -121,14 +125,14 @@ class RuleCompiler {
                         $reading .= $line[$i];
                     }
                 } else {
-                    if($backslash) {
+                    if ($backslash) {
                         $backslash = false;
                         $reading .= $line[$i];
                     } else {
-                        if($line[$i] == '\\') {
+                        if ($line[$i] == '\\') {
                             $backslash = true;
                             $reading .= $line[$i];
-                        } elseif($line[$i] == $expect) {
+                        } elseif ($line[$i] == $expect) {
                             $node->set($reading);
                             $reading = '';
                             $expect = '';
@@ -139,10 +143,47 @@ class RuleCompiler {
                 }
             }
         }
-        if(!$node instanceof Root) throw new Exception('解析时遇到了意外的 <code>EOF</code>。');
+        if (!$node instanceof Root) throw new Exception('解析时遇到了意外的 <code>EOF</code>。');
         $this->_ast = $ast;
-        var_dump($ast);
         return true;
+    }
+
+    /**
+     * 输出语法树
+     * 
+     * @access public
+     * @return \CommentRuleset\Root|null
+     */
+    public function __debugInfo() {
+        return $this->_ast;
+    }
+
+    /**
+     * 导出为其他形式
+     * 
+     * @access public
+     * @param \CommentRuleset\Translator $translator
+     * @param bool $ifPrint 是否输出，默认 false
+     * @return string
+     */
+    public function export($translator, $ifPrint = false) {
+        function export_dfs($node, $translator) {
+            if (!($node instanceof ASTNode)) return '';
+            if (!$translator->enterNode()) return '';
+            $result = $translator->nodeStartToken($node);
+            if ($node instanceof Root) {
+                $result .= export_dfs($node->judge, $translator);
+            } elseif ($node instanceof Judge) {
+                $result .= export_dfs($node->then, $translator);
+                $result .= export_dfs($node->else, $translator);
+            }
+            $result .= $translator->nodeEndToken($node);
+            if (!$translator->leaveNode()) return '';
+            return $result;
+        }
+        $result = export_dfs($this->_ast, $translator);
+        if ($ifPrint) echo $result;
+        return $result;
     }
 }
 
@@ -179,8 +220,12 @@ class Operator {
      * @throws \CommentRuleset\Exception
      */
     public function __construct($optr) {
-        if(in_array($optr, self::OPTRS)) $this->type = $optr;
+        if (in_array($optr, self::OPTRS)) $this->type = $optr;
         else throw new Exception('解析时遇到了无法识别的运算符 <code>' . htmlspecialchars($optr) . '</code>。');
+    }
+
+    public function __toString() {
+        return $this->type;
     }
 }
 
@@ -313,7 +358,7 @@ class Judge extends ASTNode {
     }
 
     public function name($name) {
-        if(!in_array($name, self::NAMES)) throw new Exception('解析时遇到了无法识别的名称 <code>' . htmlspecialchars($name) . '</code>。');
+        if (!in_array($name, self::NAMES)) throw new Exception('解析时遇到了无法识别的名称 <code>' . htmlspecialchars($name) . '</code>。');
         $this->name = $name;
     }
 
@@ -363,14 +408,23 @@ class Value extends ASTNode {
 
     public function set($value) {
         $intval = intval($value);
-        if(!$intval && $value !== '0') {
-            if(!in_array($value, self::SIGNALS)) throw new Exception('解析时遇到了无法识别的标识 <code>' . htmlspecialchars($value) . '</code>。');
+        if (!$intval && $value !== '0') {
+            if (!in_array($value, self::SIGNALS)) throw new Exception('解析时遇到了无法识别的标识 <code>' . htmlspecialchars($value) . '</code>。');
             $this->type = 'signal';
             $this->value = $value;
         } else {
             $this->type = 'number';
             $this->value = $intval;
         }
+    }
+
+    public function __toString() {
+        if ($this->type == 'number') {
+            return strval($this->value);
+        } elseif ($this->type == 'signal') {
+            return 'TODO';
+        }
+        return '';
     }
 }
 
@@ -379,7 +433,7 @@ class Value extends ASTNode {
  */
 class SingleQuotedText extends Value {
     public function set($text) {
-        if(self::checkSingleQuotedText($text)) {
+        if (self::checkSingleQuotedText($text)) {
             $this->type = 'sqtext';
             $this->value = $text;
         }
@@ -396,17 +450,21 @@ class SingleQuotedText extends Value {
     public static function checkSingleQuotedText($str) {
         $len = strlen($str);
         $special = false;
-        for($i = 0; $i < $len; $i ++) {
-            if($special) {
-                if($str[$i] == '\\' || $str[$i] == '\'') $special = false;
+        for ($i = 0; $i < $len; $i++) {
+            if ($special) {
+                if ($str[$i] == '\\' || $str[$i] == '\'') $special = false;
                 else throw new Exception('解析时遇到了意外的反斜杠，如果要在单引号字符串中使用反斜杠，请使用反斜杠转义。', $i);
             } else {
-                if($str[$i] == '\\') $special = true;
-                elseif($str[$i] == '\'') throw new Exception('解析时遇到了意外的单引号，如果要在单引号字符串中使用单引号，请使用反斜杠转义。', $i);
+                if ($str[$i] == '\\') $special = true;
+                elseif ($str[$i] == '\'') throw new Exception('解析时遇到了意外的单引号，如果要在单引号字符串中使用单引号，请使用反斜杠转义。', $i);
             }
         }
-        if($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在单引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
+        if ($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在单引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
         return true;
+    }
+
+    public function __toString() {
+        return "'{$this->value}'";
     }
 }
 
@@ -415,7 +473,7 @@ class SingleQuotedText extends Value {
  */
 class DoubleQuotedText extends Value {
     public function set($text) {
-        if(self::checkDoubleQuotedText($text)) {
+        if (self::checkDoubleQuotedText($text)) {
             $this->type = 'dqtext';
             $this->value = $text;
         }
@@ -433,17 +491,21 @@ class DoubleQuotedText extends Value {
         $len = strlen($str);
         $escape = array('\\', '"', 'n', 'r', 't', '$', '0', '1', '2', '3', '4', '5', '6', '7', 'x');
         $special = false;
-        for($i = 0; $i < $len; $i ++) {
-            if($special) {
-                if(in_array($str[$i], $escape)) $special = false;
+        for ($i = 0; $i < $len; $i++) {
+            if ($special) {
+                if (in_array($str[$i], $escape)) $special = false;
                 else throw new Exception('解析时遇到了意外的反斜杠，如果要在双引号字符串中使用反斜杠，请使用反斜杠转义。', $i);
             } else {
-                if($str[$i] == '\\') $special = true;
-                elseif($str[$i] == '"') throw new Exception('解析时遇到了意外的双引号，如果要在双引号字符串中使用双引号，请使用反斜杠转义。', $i);
+                if ($str[$i] == '\\') $special = true;
+                elseif ($str[$i] == '"') throw new Exception('解析时遇到了意外的双引号，如果要在双引号字符串中使用双引号，请使用反斜杠转义。', $i);
             }
         }
-        if($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在双引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
+        if ($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在双引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
         return true;
+    }
+
+    public function __toString() {
+        return "\"{$this->value}\"";
     }
 }
 
@@ -452,7 +514,7 @@ class DoubleQuotedText extends Value {
  */
 class Regex extends Value {
     public function set($regex) {
-        if(self::regexCompileTest($regex)) {
+        if (self::regexCompileTest($regex)) {
             $this->type = 'regex';
             $this->value = $regex;
         } else throw new Exception('正则表达式编译失败。');
@@ -467,5 +529,74 @@ class Regex extends Value {
      */
     public static function regexCompileTest($regex) {
         return @preg_match("/$regex/", '') !== false;
+    }
+}
+
+abstract class Translator {
+    /**
+     * 进入节点前
+     * 
+     * @access public
+     * @param \CommentRuleset\ASTNode $node
+     * @return bool true 表示进入，false 表示不进入。无论进不进入，均会对应调用 leaveNode
+     */
+    public function enterNode($node) {
+        return true;
+    }
+
+    /**
+     * 离开节点后
+     * 
+     * @access public
+     * @param \CommentRuleset\ASTNode $node
+     * @return bool true 表示保留该节点中已翻译的内容，false 表示丢弃。
+     */
+    public function leaveNode($node) {
+        return true;
+    }
+
+    /**
+     * 节点开始标记
+     * 
+     * @access public
+     * @param \CommentRuleset\ASTNode $node
+     * @return string
+     */
+    abstract public function nodeStartToken($node);
+
+    /**
+     * 节点结束标记
+     * 
+     * @access public
+     * @param \CommentRuleset\ASTNode $node
+     * @return string
+     */
+    abstract public function nodeEndToken($node);
+}
+
+class PhpTranslator extends Translator {
+    public function nodeStartToken($node) {
+        $result = '';
+        if ($node instanceof Root) {
+            $result = "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n";
+        } elseif ($node instanceof Judge) {
+            if ($node->optr == '<-') {
+                if (!($node->target instanceof Value) || $node->target instanceof Regex)
+                    throw new Exception('<code>&lt;-</code> 运算符的右侧应当为文本。');
+                $result = "if (stripos(\$param['{$node->name}'], {$node->target}) !== false) {";
+            } elseif ($node->optr == '~') {
+
+            } else {
+                if ($node->target instanceof Regex)
+                    throw new Exception('正则字面量只允许与 <code>~</code> 运算符搭配使用。');
+                $result = "if (\$param['{$node->name}'] {$node->optr} {$node->target})";
+            }
+            // TODO: 根据下级节点情况打标记
+        }
+        return $result;
+    }
+
+    public function nodeEndToken($node) {
+        return 'TODO';
     }
 }
