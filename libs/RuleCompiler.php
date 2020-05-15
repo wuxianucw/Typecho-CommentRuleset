@@ -165,6 +165,7 @@ class RuleCompiler {
      * @param \CommentRuleset\Translator $translator
      * @param bool $ifPrint 是否输出，默认 false
      * @return string
+     * @throws \CommentRuleset\Exception
      */
     public function export($translator, $ifPrint = false) {
         function export_dfs($node, $translator) {
@@ -561,6 +562,7 @@ abstract class Translator {
      * @access public
      * @param \CommentRuleset\ASTNode $node
      * @return string
+     * @throws \CommentRuleset\Exception
      */
     abstract public function nodeStartToken($node);
 
@@ -570,6 +572,7 @@ abstract class Translator {
      * @access public
      * @param \CommentRuleset\ASTNode $node
      * @return string
+     * @throws \CommentRuleset\Exception
      */
     abstract public function nodeEndToken($node);
 }
