@@ -141,7 +141,7 @@ class RuleCompiler {
                                     $i++;
                                     $reading .= $line[$i];
                                 }
-                                $node->modifiers = $reading;
+                                $node->modifier = $reading;
                                 $reading = '';
                             }
                             $expect = '';
@@ -177,19 +177,21 @@ class RuleCompiler {
      * @throws \CommentRuleset\Exception
      */
     public function export($translator, $ifPrint = false) {
-        function export_dfs($node, $translator) {
-            if (!$node instanceof ASTNode) return '';
-            if (!$translator->enterNode()) return '';
-            $result = $translator->nodeStartToken($node);
-            if ($node instanceof Root) {
-                $result .= export_dfs($node->judge, $translator);
-            } elseif ($node instanceof Judge) {
-                $result .= export_dfs($node->then, $translator);
-                $result .= export_dfs($node->else, $translator);
+        if (!function_exists('\CommentRuleset\export_dfs')) {
+            function export_dfs($node, $translator) {
+                if (!$node instanceof ASTNode) return '';
+                if (!$translator->enterNode($node)) return '';
+                $result = $translator->nodeStartToken($node);
+                if ($node instanceof Root) {
+                    $result .= export_dfs($node->judge, $translator);
+                } elseif ($node instanceof Judge) {
+                    $result .= export_dfs($node->then, $translator);
+                    $result .= export_dfs($node->else, $translator);
+                }
+                $result .= $translator->nodeEndToken($node);
+                if (!$translator->leaveNode($node)) return '';
+                return $result;
             }
-            $result .= $translator->nodeEndToken($node);
-            if (!$translator->leaveNode()) return '';
-            return $result;
         }
         $result = export_dfs($this->_ast, $translator);
         if ($ifPrint) echo $result;
@@ -398,7 +400,7 @@ class Value extends ASTNode {
      * 
      * @var array
      */
-    const SIGNALS = array('pass', 'accept', 'review', 'spam', 'deny');
+    const SIGNALS = array('accept', 'review', 'spam', 'deny', 'skip');
 
     /**
      * 类型
@@ -602,30 +604,38 @@ abstract class Translator {
 class PhpTranslator extends Translator {
     public function nodeStartToken($node) {
         $result = '';
+        if ($node->parent instanceof Judge && $node === $node->parent->else) $result .= ' } else { ';
         if ($node instanceof Root) {
-            $result = "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n";
+            $result .= "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n";
         } elseif ($node instanceof Judge) {
-            $result = 'if (';
+            $result .= 'if (';
             if ($node->optr == '<-') {
                 if (!$node->target instanceof Value || $node->target instanceof Regex)
                     throw new Exception('<code>&lt;-</code> 运算符的右侧应当为文本。');
-                $result .= "stripos(\$param['{$node->name}'], {$node->target}) !== false";
+                $result .= "stripos(\$params['{$node->name}'], {$node->target}) !== false";
             } elseif ($node->optr == '~') {
                 if (!$node->target instanceof Regex)
                     throw new Exception('<code>~</code> 运算符只允许与正则字面量搭配使用。');
-                $result .= "preg_match({$node->target}, \$param['{$node->name}']) === 1";
+                $result .= "preg_match({$node->target}, \$params['{$node->name}']) === 1";
             } else {
                 if ($node->target instanceof Regex)
                     throw new Exception('正则字面量只允许与 <code>~</code> 运算符搭配使用。');
-                $result .= "\$param['{$node->name}'] {$node->optr} {$node->target}";
+                $result .= "\$params['{$node->name}'] {$node->optr} {$node->target}";
             }
-            $result .= ') {';
-            // TODO: 根据下级节点情况打标记
+            $result .= ') { ';
+        } elseif ($node instanceof Value) {
+            if ($node->type == 'signal') {
+                $result .= 'return CommentRuleset_Plugin::FLAG_' . strtoupper($node);
+            } else {
+                $result .= $node;
+            }
         }
         return $result;
     }
 
     public function nodeEndToken($node) {
-        return 'TODO';
+        if ($node instanceof Root) return "\n";
+        elseif ($node instanceof Judge) return ' }';
+        return ';';
     }
 }
