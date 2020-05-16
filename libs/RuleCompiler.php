@@ -85,7 +85,7 @@ class RuleCompiler {
                             if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。');
                             $node->then($child);
                             $reading = '';
-                        } else throw new Exception('解析时遇到了意外的 <code>!</code>。');
+                        }
                         $node->pos = 2;
                     } elseif ($line[$i] == ';') {
                         if (!$node instanceof Judge || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>;</code>。');
@@ -164,7 +164,7 @@ class RuleCompiler {
      * @return \CommentRuleset\Root|null
      */
     public function __debugInfo() {
-        return $this->_ast;
+        return array('ast' => $this->_ast);
     }
 
     /**
@@ -178,7 +178,7 @@ class RuleCompiler {
      */
     public function export($translator, $ifPrint = false) {
         function export_dfs($node, $translator) {
-            if (!($node instanceof ASTNode)) return '';
+            if (!$node instanceof ASTNode) return '';
             if (!$translator->enterNode()) return '';
             $result = $translator->nodeStartToken($node);
             if ($node instanceof Root) {
@@ -398,7 +398,7 @@ class Value extends ASTNode {
      * 
      * @var array
      */
-    const SIGNALS = array('accept', 'review', 'spam', 'deny');
+    const SIGNALS = array('pass', 'accept', 'review', 'spam', 'deny');
 
     /**
      * 类型
@@ -607,11 +607,11 @@ class PhpTranslator extends Translator {
         } elseif ($node instanceof Judge) {
             $result = 'if (';
             if ($node->optr == '<-') {
-                if (!($node->target instanceof Value) || $node->target instanceof Regex)
+                if (!$node->target instanceof Value || $node->target instanceof Regex)
                     throw new Exception('<code>&lt;-</code> 运算符的右侧应当为文本。');
                 $result .= "stripos(\$param['{$node->name}'], {$node->target}) !== false";
             } elseif ($node->optr == '~') {
-                if (!($node->target instanceof Regex))
+                if (!$node->target instanceof Regex)
                     throw new Exception('<code>~</code> 运算符只允许与正则字面量搭配使用。');
                 $result .= "preg_match({$node->target}, \$param['{$node->name}']) === 1";
             } else {

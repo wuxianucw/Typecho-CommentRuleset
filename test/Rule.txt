@@ -1,0 +1,10 @@
+# 规则样例
+
+# 判断：用方括号表示对方括号内表达式的判断
+# 指定操作：用 : 指定表达式成立时执行的操作
+# [ uid == 1 ] : accept ; 编译为 if($uid == 1) accept();
+# 指定操作：用 ! 指定表达式不成立时执行的操作
+# [ uid == 1 ] : accept ! review ; 编译为 if($uid == 1) accept(); else review();
+# 嵌套
+[ uid == 1 ] : accept ! [ ip ~ /192\.168\.\d+\.\d+/ ] : review ! deny ; ;
+# if($uid == 1) accept(); else { if(preg_match('/192\\.168\\.\\d+\\.\\d+/', $ip)) review(); else deny(); }
