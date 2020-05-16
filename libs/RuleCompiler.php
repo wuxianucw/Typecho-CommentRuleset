@@ -38,6 +38,7 @@ class RuleCompiler {
             '\'' => '\CommentRuleset\SingleQuotedText',
             '/' => '\CommentRuleset\Regex'
         );
+        $modifiers = 'imsxADSUXJu'; // 正则表达式修饰符
         $special_flag = array_keys($special); // 预处理一次，提高效率
         $expect = ''; // 当前状态等待读入的字符，只能是 $special_flag 中的字符
         $backslash = false; // 反斜杠标记，上一个字符是否是反斜杠，仅 $ignore == true 时有意义
@@ -135,6 +136,14 @@ class RuleCompiler {
                         } elseif ($line[$i] == $expect) {
                             $node->set($reading);
                             $reading = '';
+                            if ($expect == '/') { // 处理正则字面量模式修饰符
+                                while ($i < $len - 1 && strpos($modifiers, $line[$i + 1]) !== false) {
+                                    $i++;
+                                    $reading .= $line[$i];
+                                }
+                                $node->modifiers = $reading;
+                                $reading = '';
+                            }
                             $expect = '';
                         } else {
                             $reading .= $line[$i];
@@ -420,12 +429,7 @@ class Value extends ASTNode {
     }
 
     public function __toString() {
-        if ($this->type == 'number') {
-            return strval($this->value);
-        } elseif ($this->type == 'signal') {
-            return 'TODO';
-        }
-        return '';
+        return strval($this->value);
     }
 }
 
@@ -514,6 +518,14 @@ class DoubleQuotedText extends Value {
  * Regex Node
  */
 class Regex extends Value {
+    /**
+     * 模式修饰符
+     * 
+     * @access public
+     * @var string
+     */
+    public $modifier;
+
     public function set($regex) {
         if (self::regexCompileTest($regex)) {
             $this->type = 'regex';
@@ -530,6 +542,10 @@ class Regex extends Value {
      */
     public static function regexCompileTest($regex) {
         return @preg_match("/$regex/", '') !== false;
+    }
+
+    public function __toString() {
+        return '\'/' . str_replace(array('\\', '\''), array('\\\\', '\\\''), $this->value) . "/{$this->modifier}'";
     }
 }
 
@@ -589,17 +605,21 @@ class PhpTranslator extends Translator {
         if ($node instanceof Root) {
             $result = "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n";
         } elseif ($node instanceof Judge) {
+            $result = 'if (';
             if ($node->optr == '<-') {
                 if (!($node->target instanceof Value) || $node->target instanceof Regex)
                     throw new Exception('<code>&lt;-</code> 运算符的右侧应当为文本。');
-                $result = "if (stripos(\$param['{$node->name}'], {$node->target}) !== false) {";
+                $result .= "stripos(\$param['{$node->name}'], {$node->target}) !== false";
             } elseif ($node->optr == '~') {
-
+                if (!($node->target instanceof Regex))
+                    throw new Exception('<code>~</code> 运算符只允许与正则字面量搭配使用。');
+                $result .= "preg_match({$node->target}, \$param['{$node->name}']) === 1";
             } else {
                 if ($node->target instanceof Regex)
                     throw new Exception('正则字面量只允许与 <code>~</code> 运算符搭配使用。');
-                $result = "if (\$param['{$node->name}'] {$node->optr} {$node->target})";
+                $result .= "\$param['{$node->name}'] {$node->optr} {$node->target}";
             }
+            $result .= ') {';
             // TODO: 根据下级节点情况打标记
         }
         return $result;
