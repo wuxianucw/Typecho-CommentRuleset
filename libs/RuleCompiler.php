@@ -28,7 +28,7 @@ class RuleCompiler {
      * 
      * @access public
      * @param string $rule
-     * @return bool
+     * @return \CommentRuleset\RuleCompiler
      * @throws \CommentRuleset\Exception
      */
     public function parse($rule) {
@@ -41,7 +41,7 @@ class RuleCompiler {
         $modifiers = 'imsxADSUXJu'; // 正则表达式修饰符
         $special_flag = array_keys($special); // 预处理一次，提高效率
         $expect = ''; // 当前状态等待读入的字符，只能是 $special_flag 中的字符
-        $backslash = false; // 反斜杠标记，上一个字符是否是反斜杠，仅 $ignore == true 时有意义
+        $backslash = false; // 反斜杠标记，上一个字符是否是反斜杠，仅 $expect 不为空时有意义
         $optr_flag = '=!<>~-'; // 运算符表
         $optr = false; // 运算符标记，是否正在读取运算符
         $reading = ''; // 读入串，当前已经读入的内容
@@ -52,44 +52,49 @@ class RuleCompiler {
             $line .= "\n"; // 补上行尾
             $len = strlen($line);
             for ($i = 0; $i < $len; $i++) {
-                if ($expect == '') {
+                if ($expect == '') { // expect 为空，正常解析 Token
                     if ($line[$i] == '#') break; // 跳过注释
                     if (strpos(" \t\n\r\x0B\0", $line[$i]) !== false) continue; // 没有 expect 时空白字符一定可以忽略
-                    if ($eor) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code，期望 <code>EOF</code>。');
-                    if ($line[$i] == '[') {
-                        if ($reading != '' || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        $method = $node->pos == 1 ? 'then' : 'else';
+                    if ($eor) // 此时规则应当已经结束
+                        throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>，期望 <code>EOF</code>。');
+                    if ($line[$i] == '[') { // 读到 Judge 开始的 Token
+                        if ($reading != '' || $node->pos == 0) // 一个 Judge 之前不能有字面量，同时这个 Judge 也不应该位于另一个 Judge 的条件块中
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        $method = $node->pos == 1 ? 'then' : 'else'; // 处理分支
                         $child = new Judge();
                         $node->$method($child);
                         $node = $child;
-                    } elseif ($line[$i] == ']') {
-                        if ($node instanceof Value) {
-                            if ($reading != '') throw new Exception('解析时遇到了无法识别的结构。');
+                    } elseif ($line[$i] == ']') { // 读到 Judge 条件结束的 Token
+                        if ($node instanceof Value) { // 运算符右侧是字符串或正则字面量的情形
+                            if ($reading != '') throw new Exception('解析时遇到了无法识别的结构。'); // 此时整个字面量应该已经处理完毕，否则非法
                             $node = $node->parent;
-                        } elseif ($node instanceof Judge) {
-                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>]</code>。');
+                        } elseif ($node instanceof Judge) { // 运算符右侧是数字的情形
+                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 运算符右侧什么也没有，非法
                             $child = new Value();
                             $child->set($reading);
-                            if ($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构。');
+                            if ($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构。'); // 必须是一个数字
                             $node->target($child);
-                        } else throw new Exception('解析时遇到了意外的 <code>]</code>。');
-                        $reading = '';
-                    } elseif ($line[$i] == ':') {
-                        if (!$node instanceof Judge || $node->then != null || $reading != '') throw new Exception('解析时遇到了意外的 <code>:</code>。');
-                        $node->pos = 1;
-                    } elseif ($line[$i] == '!') {
-                        if (!$node instanceof Judge || $node->else != null) throw new Exception('解析时遇到了意外的 <code>!</code>。');
-                        if ($reading != '' && $node->pos == 1) {
+                        } else throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 其余情况均不应该出现一个 ']'
+                        $reading = ''; // 清空读入串以便后续使用
+                    } elseif ($line[$i] == ':') { // 读到 Judge then 开始的 Token
+                        if (!$node instanceof Judge || $node->then != null || $reading != '') // 当前节点必须是一个未设置 then 的 Judge，Token 前也不应该有多余的东西
+                            throw new Exception('解析时遇到了意外的 <code>:</code>。');
+                        $node->pos = 1; // 设置标志为处理 then 分支
+                    } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token
+                        if (!$node instanceof Judge || $node->else != null) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
+                            throw new Exception('解析时遇到了意外的 <code>!</code>。');
+                        if ($reading != '' && $node->pos == 1) { // 处理这个 signal
                             $child = new Value();
                             $child->set($reading);
-                            if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。');
+                            if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。'); // 非法
                             $node->then($child);
                             $reading = '';
                         }
-                        $node->pos = 2;
-                    } elseif ($line[$i] == ';') {
-                        if (!$node instanceof Judge || $node->pos == 0) throw new Exception('解析时遇到了意外的 <code>;</code>。');
-                        if ($reading != '') {
+                        $node->pos = 2; // 设置标志为处理 else 分支
+                    } elseif ($line[$i] == ';') { // 读到 Judge 结束的 Token
+                        if (!$node instanceof Judge || $node->pos == 0) // 当前节点必须是一个有分支的 Judge
+                            throw new Exception('解析时遇到了意外的 <code>;</code>。');
+                        if ($reading != '') { // 处理前一个分支中的 signal
                             $method = $node->pos == 1 ? 'then' : 'else';
                             if ($node->$method != null) throw new Exception('解析时遇到了无法识别的结构。');
                             $child = new Value();
@@ -98,63 +103,68 @@ class RuleCompiler {
                             $node->$method($child);
                             $reading = '';
                         }
-                        if (!$node->isLegal()) throw new Exception('解析时遇到了意外的 <code>;</code>。');
+                        if (!$node->isLegal()) throw new Exception('解析时遇到了意外的 <code>;</code>。'); // Judge 必须合法
                         $node = $node->parent;
-                        if ($node instanceof Root) $eor = true;
-                    } elseif ($node instanceof Judge && $node->pos == 0 && in_array($line[$i], $special_flag)) {
-                        $optr = false;
-                        if ($node->target != null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        if (($node->optr != null && $reading != '') || ($node->optr == null && $reading == '')) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        if ($reading != '') $node->optr($reading);
+                        if ($node instanceof Root) $eor = true; // 如果已经回到根节点，则期望规则结束
+                    } elseif ($node instanceof Judge && $node->pos == 0 && in_array($line[$i], $special_flag)) { // 在 Judge 条件块中读到特殊字面量
+                        $optr = false; // 复位运算符标记，结束运算符读入状态
+                        if ($node->target != null) // 特殊字面量必须在 target 位置，该位置现在应该为空
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if (($node->optr != null && $reading != '') || ($node->optr == null && $reading == '')) // 已经存在运算符但读入串不为空、不存在运算符且读入串为空均不合法
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if ($reading != '') $node->optr($reading); // 设置运算符
                         $reading = '';
-                        if ($node->name == '' || $node->optr == null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        $expect = $line[$i];
+                        if ($node->name == '' || $node->optr == null) // 完整性检查
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        $expect = $line[$i]; // 标记 expect
                         $child = new $special[$expect]();
                         $node->target($child);
                         $node = $child;
-                    } elseif ($optr == false && $node instanceof Judge && $node->pos == 0 && strpos($optr_flag, $line[$i]) !== false) {
-                        if ($node->name != '' || $reading == '') throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        if ($node->optr != null) throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        $node->name($reading);
+                    } elseif ($optr == false && $node instanceof Judge && $node->pos == 0 && strpos($optr_flag, $line[$i]) !== false) { // 在 Judge 条件块中当运算符标记为 false 时读到可能构成运算符的字符
+                        if ($node->name != '' || $reading == '') // 此时需要设置 name，所以 name 必须为空，同时读入串中必须有内容
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if ($node->optr != null) // 此时不应存在运算符
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        $node->name($reading); // 设置 name
                         $reading = $line[$i];
-                        $optr = true;
-                    } elseif ($optr && strpos($optr_flag, $line[$i]) === false) {
+                        $optr = true; // 设置运算符标记为 true
+                    } elseif ($optr && strpos($optr_flag, $line[$i]) === false) { // 运算符标记为 true 时读到不能构成运算符的字符（处理数字情况）
                         $optr = false;
                         $node->optr($reading);
-                        $reading = $line[$i];
-                    } else {
+                        $reading = $line[$i]; // 直接写入读入串
+                    } else { // 其余情况，全部写入读入串等待处理
                         $reading .= $line[$i];
                     }
-                } else {
-                    if ($backslash) {
-                        $backslash = false;
+                } else { // expect 不为空，忽略除 expect 外的所有 Token
+                    if ($backslash) { // 反斜线转义，这个字符无论是什么都不处理
+                        $backslash = false; // 复位反斜线标记
                         $reading .= $line[$i];
                     } else {
-                        if ($line[$i] == '\\') {
-                            $backslash = true;
+                        if ($line[$i] == '\\') { // 读到反斜线
+                            $backslash = true; // 设置反斜线标记为 true
                             $reading .= $line[$i];
-                        } elseif ($line[$i] == $expect) {
-                            $node->set($reading);
+                        } elseif ($line[$i] == $expect) { // 读到 expect
+                            $node->set($reading); // 将读入串内容写入节点
                             $reading = '';
                             if ($expect == '/') { // 处理正则字面量模式修饰符
-                                while ($i < $len - 1 && strpos($modifiers, $line[$i + 1]) !== false) {
+                                while ($i < $len - 1 && strpos($modifiers, $line[$i + 1]) !== false) { // 只要后面是一个修饰符就不断预读直到行末
                                     $i++;
                                     $reading .= $line[$i];
                                 }
-                                $node->modifier = $reading;
+                                $node->modifier = $reading; // 设置修饰符
                                 $reading = '';
                             }
-                            $expect = '';
-                        } else {
+                            $expect = ''; // 复位 expect
+                        } else { // 其余情况，全部写入读入串等待处理
                             $reading .= $line[$i];
                         }
                     }
                 }
             }
         }
-        if (!$node instanceof Root) throw new Exception('解析时遇到了意外的 <code>EOF</code>。');
+        if (!$node instanceof Root) throw new Exception('解析时遇到了意外的 <code>EOF</code>。'); // 当前节点不是根节点，结构不完整
         $this->_ast = $ast;
-        return true;
+        return $this;
     }
 
     /**
@@ -326,7 +336,7 @@ class Judge extends ASTNode {
     public $target;
 
     /**
-     * :
+     * `:`
      * 
      * @access public
      * @var mixed
@@ -334,7 +344,7 @@ class Judge extends ASTNode {
     public $then;
 
     /**
-     * !
+     * `!`
      * 
      * @access public
      * @var mixed
