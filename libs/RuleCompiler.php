@@ -615,7 +615,9 @@ class RuleTranslator extends Translator {
             elseif ($node === $node->parent->else) $result .= ' ! ';
         }
         if ($node instanceof Judge) {
-            $result .= "[ {$node->name} {$node->optr} {$node->target} ]";
+            if ($node->target instanceof Regex) $target = "/{$node->target->value}/{$node->target->modifier}";
+            else $target = strval($node->target);
+            $result .= "[ {$node->name} {$node->optr} {$target} ]";
         } elseif ($node instanceof Value) {
             $result .= $node;
         }
@@ -667,5 +669,15 @@ class PhpTranslator extends Translator {
         if ($node instanceof Root) return "\n";
         elseif ($node instanceof Judge) return ' }';
         return ';';
+    }
+}
+
+class JsonTranslator extends Translator {
+    public function nodeStartToken($node) {
+        // TODO
+    }
+
+    public function nodeEndToken($node) {
+        // TODO
     }
 }
