@@ -1,6 +1,7 @@
 <?php
 use CommentRuleset\PhpTranslator;
 use CommentRuleset\RuleCompiler;
+use CommentRuleset\RuleTranslator;
 
 define('__TYPECHO_ROOT_DIR__', '/');
 require '../libs/RuleCompiler.php';
@@ -15,7 +16,20 @@ pre {
 }
 </style>
 EOF;
-$translator = new PhpTranslator();
+function test_php_translator($input) {
+    echo '<pre>';
+    highlight_string((new RuleCompiler())->parse($input)->export(new PhpTranslator()));
+    echo '</pre>';
+}
+function test_rule_translator($input) {
+    $compiler = new RuleCompiler();
+    $translator = new RuleTranslator();
+    echo '<pre><code>';
+    echo htmlspecialchars($res = $compiler->parse($input)->export($translator));
+    echo '<br>Verify: ';
+    echo $res === $compiler->parse($res)->export($translator) ? 'true' : 'false';
+    echo '</code></pre>';
+}
 $input = <<<EOF
 # RuleCompiler Test
 [uid==1]:[uid==1]:accept;!
@@ -24,16 +38,11 @@ $input = <<<EOF
      : [content~/ucw/i]:review;
      ! deny ; ; ;
 EOF;
-$compiler = new RuleCompiler();
-$compiler->parse($input);
-echo '<pre>';
-highlight_string($compiler->export($translator));
-echo '</pre>';
+test_php_translator($input);
+test_rule_translator($input);
 $input = <<<EOF
 # RuleCompiler Test
 [uid==1]:!accept;
 EOF;
-$compiler->parse($input);
-echo '<pre>';
-highlight_string($compiler->export($translator));
-echo '</pre>';
+test_php_translator($input);
+test_rule_translator($input);

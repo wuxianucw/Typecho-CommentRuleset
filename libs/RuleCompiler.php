@@ -6,7 +6,6 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  * 
  * @package CommentRuleset
  * @author wuxianucw
- * @version 1.0.0
  * @license GNU Affero General Public License v3.0
  * @link https://ucw.moe/
  */
@@ -606,6 +605,27 @@ abstract class Translator {
      * @throws \CommentRuleset\Exception
      */
     abstract public function nodeEndToken($node);
+}
+
+class RuleTranslator extends Translator {
+    public function nodeStartToken($node) {
+        $result = '';
+        if ($node->parent instanceof Judge) {
+            if ($node === $node->parent->then) $result .= ' : ';
+            elseif ($node === $node->parent->else) $result .= ' ! ';
+        }
+        if ($node instanceof Judge) {
+            $result .= "[ {$node->name} {$node->optr} {$node->target} ]";
+        } elseif ($node instanceof Value) {
+            $result .= $node;
+        }
+        return $result;
+    }
+
+    public function nodeEndToken($node) {
+        if ($node instanceof Judge) return ' ;';
+        return '';
+    }
 }
 
 /**
