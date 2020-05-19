@@ -19,22 +19,40 @@ pre {
 EOF;
 function test_php_translator($input) {
     echo '<pre>';
-    highlight_string((new RuleCompiler())->parse($input)->export(new PhpTranslator()));
+    try {
+        highlight_string((new RuleCompiler())->parse($input)->export(new PhpTranslator()));
+    } catch (\CommentRuleset\Exception $e) {
+        echo $e->getMessage();
+    }
     echo '</pre>';
 }
 function test_rule_translator($input) {
     $compiler = new RuleCompiler();
     $translator = new RuleTranslator();
-    echo '<pre><code>';
-    echo htmlspecialchars($res = $compiler->parse($input)->export($translator));
-    echo '<br>Verify: ';
-    echo $res === $compiler->parse($res)->export($translator) ? 'true' : 'false';
-    echo '</code></pre>';
+    echo '<pre>';
+    try {
+        $res = $compiler->parse($input)->export($translator);
+        echo '<code>';
+        echo htmlspecialchars($res);
+        echo '<br>Verify: ';
+        echo $res === $compiler->parse($res)->export($translator) ? 'true' : 'false';
+        echo '</code>';
+    } catch (\CommentRuleset\Exception $e) {
+        echo $e->getMessage();
+    }
+    echo '</pre>';
 }
 function test_json_translator($input) {
-    echo '<pre><code>';
-    echo htmlspecialchars((new RuleCompiler())->parse($input)->export(new JsonTranslator()));
-    echo '</code></pre>';
+    echo '<pre>';
+    try {
+        $res = (new RuleCompiler())->parse($input)->export(new JsonTranslator());
+        echo '<code>';
+        echo htmlspecialchars($res);
+        echo '</code>';
+    } catch (\CommentRuleset\Exception $e) {
+        echo $e->getMessage();
+    }
+    echo '</pre>';
 }
 $input = <<<EOF
 # RuleCompiler Test

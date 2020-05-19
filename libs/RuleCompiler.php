@@ -163,6 +163,7 @@ class RuleCompiler {
             }
         }
         if (!$node instanceof Root) throw new Exception('解析时遇到了意外的 <code>EOF</code>。'); // 当前节点不是根节点，结构不完整
+        if ($reading != '') throw new Exception('解析时遇到了无法处理的 <code>' . htmlspecialchars($reading) . '</code。'); // 读入串不为空，非法
         $this->_ast = $ast;
         return $this;
     }
