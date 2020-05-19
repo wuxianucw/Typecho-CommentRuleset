@@ -480,6 +480,10 @@ class SingleQuotedText extends Value {
         return true;
     }
 
+    public function toString() {
+        return str_replace(array('\\\\', '\\\''), array('\\', '\''), $this->value);
+    }
+
     public function __toString() {
         return "'{$this->value}'";
     }
@@ -519,6 +523,10 @@ class DoubleQuotedText extends Value {
         }
         if ($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在双引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
         return true;
+    }
+
+    public function toString() {
+        return stripcslashes($this->value);
     }
 
     public function __toString() {
@@ -612,6 +620,9 @@ abstract class Translator {
     abstract public function nodeEndToken($node);
 }
 
+/**
+ * Rule 翻译器
+ */
 class RuleTranslator extends Translator {
     public function nodeStartToken($node) {
         $result = '';
@@ -677,6 +688,9 @@ class PhpTranslator extends Translator {
     }
 }
 
+/**
+ * JSON 翻译器
+ */
 class JsonTranslator extends Translator {
     /**
      * JSON 数组
@@ -718,9 +732,8 @@ class JsonTranslator extends Translator {
                 if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = $flag;
                 elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = $flag;
             }
-            if ($node->target instanceof Regex) $target = $node->target->toString();
-            elseif ($node->target->type == 'number') $target = strval($node->target);
-            else { /* TODO: 此处需要根据引号类型进行转义处理 */ }
+            if ($node->target->type == 'number') $target = strval($node->target);
+            else $target = $node->target->toString();
             $judge = array(
                 'flag' => $flag,
                 'name' => $node->name,
