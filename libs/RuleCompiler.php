@@ -151,6 +151,7 @@ class RuleCompiler {
                                     $reading .= $line[$i];
                                 }
                                 $node->modifier = $reading; // 设置修饰符
+                                if (!Regex::regexCompileTest($node->toString())) throw new Exception('正则表达式编译失败。');
                                 $reading = '';
                             }
                             $expect = ''; // 复位 expect
@@ -330,7 +331,7 @@ class Judge extends ASTNode {
      * 比较目标
      * 
      * @access public
-     * @var string
+     * @var \CommentRuleset\Value
      */
     public $target;
 
@@ -538,7 +539,7 @@ class Regex extends Value {
     public $modifier;
 
     public function set($regex) {
-        if (self::regexCompileTest($regex)) {
+        if (self::regexCompileTest("/$regex/")) {
             $this->type = 'regex';
             $this->value = $regex;
         } else throw new Exception('正则表达式编译失败。');
@@ -548,11 +549,15 @@ class Regex extends Value {
      * 正则表达式编译测试
      * 
      * @access public
-     * @param string $regex 正则表达式 不含两侧的 "/"
+     * @param string $regex 正则表达式
      * @return bool
      */
     public static function regexCompileTest($regex) {
-        return @preg_match("/$regex/", '') !== false;
+        return @preg_match($regex, '') !== false;
+    }
+
+    public function toString() {
+        return "/{$this->value}/{$this->modifier}";
     }
 
     public function __toString() {
@@ -615,7 +620,7 @@ class RuleTranslator extends Translator {
             elseif ($node === $node->parent->else) $result .= ' ! ';
         }
         if ($node instanceof Judge) {
-            if ($node->target instanceof Regex) $target = "/{$node->target->value}/{$node->target->modifier}";
+            if ($node->target instanceof Regex) $target = $node->target->toString();
             else $target = strval($node->target);
             $result .= "[ {$node->name} {$node->optr} {$target} ]";
         } elseif ($node instanceof Value) {
@@ -673,11 +678,71 @@ class PhpTranslator extends Translator {
 }
 
 class JsonTranslator extends Translator {
+    /**
+     * JSON 数组
+     * 
+     * @access protected
+     * @var array
+     */
+    protected $json;
+
+    /**
+     * 编号计数器
+     * 
+     * @access protected
+     * @var int
+     */
+    protected $count;
+
+    /**
+     * flag 栈
+     * 
+     * @access protected
+     * @var array
+     */
+    protected $flags;
+
+    function __construct() {
+        $this->json = array();
+        $this->count = 0;
+        $this->flags = array();
+    }
+
     public function nodeStartToken($node) {
-        // TODO
+        if ($node instanceof Judge) {
+            if ($node->parent instanceof Root) $flag = '#Main';
+            else {
+                $this->count++;
+                $flag = "#{$this->count}";
+                $parent_flag = end($this->flags);
+                if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = $flag;
+                elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = $flag;
+            }
+            if ($node->target instanceof Regex) $target = $node->target->toString();
+            elseif ($node->target->type == 'number') $target = strval($node->target);
+            else { /* TODO: 此处需要根据引号类型进行转义处理 */ }
+            $judge = array(
+                'flag' => $flag,
+                'name' => $node->name,
+                'optr' => strval($node->optr),
+                'target' => $target,
+                'parent' => $flag == '#Main' ? null : $parent_flag,
+                'then' => null,
+                'else' => null,
+            );
+            array_push($this->flags, $flag);
+            $this->json[$flag] = $judge;
+        } elseif ($node instanceof Value) {
+            $parent_flag = end($this->flags);
+            if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = strval($node);
+            elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = strval($node);
+        }
+        return '';
     }
 
     public function nodeEndToken($node) {
-        // TODO
+        if ($node instanceof Root) return json_encode($this->json);
+        if ($node instanceof Judge) array_pop($this->flags);
+        return '';
     }
 }

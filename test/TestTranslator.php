@@ -1,4 +1,5 @@
 <?php
+use CommentRuleset\JsonTranslator;
 use CommentRuleset\PhpTranslator;
 use CommentRuleset\RuleCompiler;
 use CommentRuleset\RuleTranslator;
@@ -30,19 +31,34 @@ function test_rule_translator($input) {
     echo $res === $compiler->parse($res)->export($translator) ? 'true' : 'false';
     echo '</code></pre>';
 }
+function test_json_translator($input) {
+    echo '<pre><code>';
+    echo htmlspecialchars((new RuleCompiler())->parse($input)->export(new JsonTranslator()));
+    echo '</code></pre>';
+}
 $input = <<<EOF
 # RuleCompiler Test
 [uid==1]:[uid==1]:accept;!
- [ email <- '123' ] : review
+ [ email <- '12
+ 3' ] : review
   ! [ email <- "@" ]
      : [content~/ucw/i]:review;
      ! deny ; ; ;
 EOF;
 test_php_translator($input);
 test_rule_translator($input);
+test_json_translator($input);
 $input = <<<EOF
 # RuleCompiler Test
 [uid==1]:!accept;
 EOF;
 test_php_translator($input);
 test_rule_translator($input);
+test_json_translator($input);
+$input = <<<EOF
+# Undefined Behavior
+accept
+EOF;
+test_php_translator($input);
+test_rule_translator($input);
+test_json_translator($input);
