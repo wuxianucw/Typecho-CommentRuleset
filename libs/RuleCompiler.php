@@ -458,34 +458,8 @@ class Value extends ASTNode {
  */
 class SingleQuotedText extends Value {
     public function set($text) {
-        if (self::checkSingleQuotedText($text)) {
-            $this->type = 'sqtext';
-            $this->value = $text;
-        }
-    }
-
-    /**
-     * 单引号语法检查
-     * 
-     * @access public
-     * @param string $str 文本 不含两侧的单引号
-     * @return bool
-     * @throws \CommentRuleset\Exception
-     */
-    public static function checkSingleQuotedText($str) {
-        $len = strlen($str);
-        $special = false;
-        for ($i = 0; $i < $len; $i++) {
-            if ($special) {
-                if ($str[$i] == '\\' || $str[$i] == '\'') $special = false;
-                else throw new Exception('解析时遇到了意外的反斜杠，如果要在单引号字符串中使用反斜杠，请使用反斜杠转义。', $i);
-            } else {
-                if ($str[$i] == '\\') $special = true;
-                elseif ($str[$i] == '\'') throw new Exception('解析时遇到了意外的单引号，如果要在单引号字符串中使用单引号，请使用反斜杠转义。', $i);
-            }
-        }
-        if ($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在单引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
-        return true;
+        $this->type = 'sqtext';
+        $this->value = $text;
     }
 
     public function toString() {
@@ -502,35 +476,8 @@ class SingleQuotedText extends Value {
  */
 class DoubleQuotedText extends Value {
     public function set($text) {
-        if (self::checkDoubleQuotedText($text)) {
-            $this->type = 'dqtext';
-            $this->value = $text;
-        }
-    }
-
-    /**
-     * 双引号语法检查
-     * 
-     * @access public
-     * @param string $str 文本 不含两侧的双引号
-     * @return bool
-     * @throws \CommentRuleset\Exception
-     */
-    public static function checkDoubleQuotedText($str) {
-        $len = strlen($str);
-        $escape = array('\\', '"', 'n', 'r', 't', '$', '0', '1', '2', '3', '4', '5', '6', '7', 'x');
-        $special = false;
-        for ($i = 0; $i < $len; $i++) {
-            if ($special) {
-                if (in_array($str[$i], $escape)) $special = false;
-                else throw new Exception('解析时遇到了意外的反斜杠，如果要在双引号字符串中使用反斜杠，请使用反斜杠转义。', $i);
-            } else {
-                if ($str[$i] == '\\') $special = true;
-                elseif ($str[$i] == '"') throw new Exception('解析时遇到了意外的双引号，如果要在双引号字符串中使用双引号，请使用反斜杠转义。', $i);
-            }
-        }
-        if ($special) throw new Exception('解析时遇到了意外的反斜杠，如果要在双引号字符串中使用反斜杠，请使用反斜杠转义。', $len - 1); // 理论上不会出现这种情况
-        return true;
+        $this->type = 'dqtext';
+        $this->value = $text;
     }
 
     public function toString() {
