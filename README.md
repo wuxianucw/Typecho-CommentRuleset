@@ -1,2 +1,3 @@
-# Typecho-CommentRuleset
-Typecho 评论规则集插件
+# Typecho 评论规则集插件
+
+开发中……

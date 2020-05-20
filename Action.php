@@ -5,7 +5,6 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  * 
  * @package CommentRuleset
  * @author wuxianucw
- * @version 1.0.0
  * @license GNU Affero General Public License v3.0
  * @link https://ucw.moe/
  */
