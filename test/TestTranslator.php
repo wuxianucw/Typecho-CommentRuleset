@@ -34,14 +34,17 @@ function test_rule_translator($input) {
     try {
         $res = $compiler->parse($input)->export($translator);
         echo '<code>';
+        echo '<br>----- Verify: -----<br>';
+        echo ' [0] => ' . ($res == $input ? 'true' : 'false');
+        echo '<br>';
+        echo ' [1] => ' . ($res == $compiler->parse($res)->export($translator) ? 'true' : 'false');
+        echo '<br>----- Result: -----<br>';
         echo htmlspecialchars($res);
-        echo '<br>Verify: ';
-        echo $res === $compiler->parse($res)->export($translator) ? 'true' : 'false';
         echo '</code>';
     } catch (\CommentRuleset\Exception $e) {
         echo $e->getMessage();
     }
-    echo '<br>----- RAW: -----<br>';
+    echo '<br>----- Input: -----<br>';
     echo htmlspecialchars($input);
     echo '</pre>';
 }
@@ -58,6 +61,6 @@ function test_json_translator($input) {
     echo '</pre>';
 }
 $input = generate_rule();
-test_php_translator($input);
 test_rule_translator($input);
+test_php_translator($input);
 test_json_translator($input);
