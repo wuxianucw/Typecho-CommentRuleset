@@ -477,7 +477,7 @@ class SingleQuotedText extends Value {
 class DoubleQuotedText extends Value {
     public function set($text) {
         $this->type = 'dqtext';
-        $this->value = $text;
+        $this->value = str_replace('$', '\\$', $text);
     }
 
     public function toString() {
