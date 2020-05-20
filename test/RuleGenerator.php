@@ -5,7 +5,7 @@ function roll($array) {
 function percent($num) {
     return mt_rand(0, 99) < $num;
 }
-function random_string($length, $charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-+.=-&^%$#@!~') {
+function random_string($length, $charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789*-+.=-&^%$#@!~/\\[]{}:"|\'()`,<>;_') {
     $size = strlen($charset);
     $res = '';
     for ($i = 0; $i < $length; $i++) {
@@ -15,13 +15,16 @@ function random_string($length, $charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij
 }
 function make_string() {
     if (percent(50)) {
-        return '"' . random_string(mt_rand(12, 50)) . '"';
+        return '"' . addslashes(random_string(mt_rand(12, 50))) . '"';
     }
-    return '\'' . random_string(mt_rand(12, 50)) . '\'';
+    return '\'' . addslashes(random_string(mt_rand(12, 50))) . '\'';
 }
 function make_regex() {
-    static $modifiers = 'imsxADSUXJu';
-    return '/' . random_string(mt_rand(12, 50)) . '/' . random_string(mt_rand(0, 11), $modifiers);
+    $modifiers = str_shuffle('imsxADSUXJu');
+    $len = strlen($modifiers);
+    $start = mt_rand(0, $len - 1);
+    $len = mt_rand(0, $len - $start);
+    return '/' . preg_quote(random_string(mt_rand(12, 50)), '/') . '/' . substr($modifiers, $start, $len);
 }
 function make_judge_condition() {
     static $names = array('uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua');
