@@ -6,6 +6,7 @@ use CommentRuleset\RuleTranslator;
 
 define('__TYPECHO_ROOT_DIR__', '/');
 require '../libs/RuleCompiler.php';
+require 'RuleGenerator.php';
 echo <<<EOF
 <style>
 pre {
@@ -40,6 +41,8 @@ function test_rule_translator($input) {
     } catch (\CommentRuleset\Exception $e) {
         echo $e->getMessage();
     }
+    echo '<br>----- RAW: -----<br>';
+    echo htmlspecialchars($input);
     echo '</pre>';
 }
 function test_json_translator($input) {
@@ -54,29 +57,7 @@ function test_json_translator($input) {
     }
     echo '</pre>';
 }
-$input = <<<EOF
-# RuleCompiler Test
-[uid==1]:[uid==1]:accept;!
- [ email <- '12
- 3' ] : review
-  ! [ email <- "@" ]
-     : [content~/ucw/i]:review;
-     ! deny ; ; ;
-EOF;
-test_php_translator($input);
-test_rule_translator($input);
-test_json_translator($input);
-$input = <<<EOF
-# RuleCompiler Test
-[uid==1]:!accept;
-EOF;
-test_php_translator($input);
-test_rule_translator($input);
-test_json_translator($input);
-$input = <<<EOF
-# Undefined Behavior
-accept
-EOF;
+$input = generate_rule();
 test_php_translator($input);
 test_rule_translator($input);
 test_json_translator($input);
