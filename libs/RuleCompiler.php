@@ -79,17 +79,24 @@ class RuleCompiler {
                         if (!$node instanceof Judge || $node->then != null || $reading != '') // 当前节点必须是一个未设置 then 的 Judge，Token 前也不应该有多余的东西
                             throw new Exception('解析时遇到了意外的 <code>:</code>。');
                         $node->pos = 1; // 设置标志为处理 then 分支
-                    } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token
+                    } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token (*) 还可能是运算符开始的 Token
                         if (!$node instanceof Judge || $node->else != null) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
                             throw new Exception('解析时遇到了意外的 <code>!</code>。');
-                        if ($reading != '' && $node->pos == 1) { // 处理这个 signal
-                            $child = new Value();
-                            $child->set($reading);
-                            if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。'); // 非法
-                            $node->then($child);
-                            $reading = '';
+                        if ($node->name == '') { // 此时这是一个运算符开始的 Token
+                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                            $node->name($reading); // 设置 name
+                            $reading = $line[$i];
+                            $optr = true; // 设置运算符标记为 true
+                        } else {
+                            if ($reading != '' && $node->pos == 1) { // 处理这个 signal
+                                $child = new Value();
+                                $child->set($reading);
+                                if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。'); // 非法
+                                $node->then($child);
+                                $reading = '';
+                            }
+                            $node->pos = 2; // 设置标志为处理 else 分支
                         }
-                        $node->pos = 2; // 设置标志为处理 else 分支
                     } elseif ($line[$i] == ';') { // 读到 Judge 结束的 Token
                         if (!$node instanceof Judge || $node->pos == 0) // 当前节点必须是一个有分支的 Judge
                             throw new Exception('解析时遇到了意外的 <code>;</code>。');
