@@ -39,16 +39,16 @@ function make_judge_condition() {
 function make_judge($_) {
     static $signals = array('accept', 'review', 'spam', 'deny', 'skip');
     $res = make_judge_condition();
-    if (percent(50)) {
+    if (percent(25)) {
         $res .= percent(50) ? ':' : '!';
-        if (percent($_)) $res .= make_judge($_ - mt_rand(0, $_));
+        if (percent($_)) $res .= make_judge($_ - mt_rand(0, 5));
         else $res .= roll($signals);
     } else {
         $res .= ':';
-        if (percent($_)) $res .= make_judge($_ - mt_rand(0, $_));
+        if (percent($_)) $res .= make_judge($_ - mt_rand(0, 5));
         else $res .= roll($signals);
         $res .= '!';
-        if (percent($_)) $res .= make_judge($_ - mt_rand(0, $_));
+        if (percent($_)) $res .= make_judge($_ - mt_rand(0, 5));
         else $res .= roll($signals);
     }
     return $res . ';';
