@@ -477,7 +477,7 @@ class SingleQuotedText extends Value {
 class DoubleQuotedText extends Value {
     public function set($text) {
         $this->type = 'dqtext';
-        $this->value = str_replace('$', '\\$', $text);
+        $this->value = $text;
     }
 
     public function toString() {
@@ -671,14 +671,12 @@ class JsonTranslator extends Translator {
      */
     protected $flags;
 
-    function __construct() {
-        $this->json = array();
-        $this->count = 0;
-        $this->flags = array();
-    }
-
     public function nodeStartToken($node) {
-        if ($node instanceof Judge) {
+        if ($node instanceof Root) {
+            $this->json = array();
+            $this->count = 0;
+            $this->flags = array();
+        } elseif ($node instanceof Judge) {
             if ($node->parent instanceof Root) $flag = '#Main';
             else {
                 $this->count++;
