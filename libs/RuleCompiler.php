@@ -685,7 +685,7 @@ class JsonTranslator extends Translator {
                 if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = $flag;
                 elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = $flag;
             }
-            if ($node->target->type == 'number') $target = strval($node->target);
+            if ($node->target->type == 'number') $target = $node->target->value; // 不进行类型转换以保证其在生成的 JSON 中不被转为文本
             else $target = $node->target->toString();
             $judge = array(
                 'flag' => $flag,
