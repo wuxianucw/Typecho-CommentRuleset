@@ -60,7 +60,7 @@ function test_json_translator($input) {
     }
     echo '</pre>';
 }
-$input = generate_rule();
+$input = RuleGenerator::newRule();
 test_rule_translator($input);
 test_php_translator($input);
 test_json_translator($input);
