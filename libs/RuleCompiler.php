@@ -612,6 +612,22 @@ class PhpTranslator extends Translator {
             $result .= "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n";
         } elseif ($node instanceof Judge) {
             $result .= 'if (';
+            $origin_text = false;
+            if ($node->target instanceof DoubleQuotedText) {
+                $origin_text = $node->target->value;
+                $new_text = '';
+                $len = strlen($origin_text);
+                $backslash = false;
+                for ($i = 0; $i < $len; $new_text .= $origin_text[$i], $i++) {
+                    if ($backslash) {
+                        $backslash = false;
+                        continue;
+                    }
+                    if ($origin_text[$i] == '\\') $backslash = true;
+                    elseif ($origin_text[$i] == '$') $new_text .= '\\';
+                }
+                $node->target->value = $new_text;
+            }
             if ($node->optr == '<-') {
                 if (!$node->target instanceof Value || $node->target instanceof Regex)
                     throw new Exception('<code>&lt;-</code> 运算符的右侧应当为文本。');
@@ -625,6 +641,7 @@ class PhpTranslator extends Translator {
                     throw new Exception('正则字面量只允许与 <code>~</code> 运算符搭配使用。');
                 $result .= "\$params['{$node->name}'] {$node->optr} {$node->target}";
             }
+            if ($origin_text !== false) $node->target->value = $origin_text;
             $result .= ') { ';
         } elseif ($node instanceof Value) {
             if ($node->type == 'signal') {
