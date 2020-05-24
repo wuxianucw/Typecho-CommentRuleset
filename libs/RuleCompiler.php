@@ -176,10 +176,10 @@ class RuleCompiler {
     }
 
     /**
-     * 输出语法树
+     * 调试信息
      * 
      * @access public
-     * @return \CommentRuleset\Root|null
+     * @return array
      */
     public function __debugInfo() {
         return array('ast' => $this->_ast);
@@ -196,18 +196,18 @@ class RuleCompiler {
      */
     public function export($translator, $ifPrint = false) {
         if (!function_exists('\CommentRuleset\export_dfs')) {
-            function export_dfs($node, $translator) {
-                if (!$node instanceof ASTNode) return '';
-                if (!$translator->enterNode($node)) return '';
-                $result = $translator->nodeStartToken($node);
-                if ($node instanceof Root) {
+            function export_dfs($node, $translator) { // 内部定义递归函数
+                if (!$node instanceof ASTNode) return ''; // 跳过非 ASTNode 节点
+                if (!$translator->enterNode($node)) return ''; // Translator::enterNode() 钩子
+                $result = $translator->nodeStartToken($node); // Translator::nodeStartToken() 钩子
+                if ($node instanceof Root) { // 处理需要递归调用的情况
                     $result .= export_dfs($node->judge, $translator);
                 } elseif ($node instanceof Judge) {
                     $result .= export_dfs($node->then, $translator);
                     $result .= export_dfs($node->else, $translator);
                 }
-                $result .= $translator->nodeEndToken($node);
-                if (!$translator->leaveNode($node)) return '';
+                $result .= $translator->nodeEndToken($node); // Translator::nodeEndToken() 钩子
+                if (!$translator->leaveNode($node)) return ''; // Translator::leaveNode() 钩子
                 return $result;
             }
         }
@@ -462,10 +462,22 @@ class SingleQuotedText extends Value {
         $this->value = $text;
     }
 
+    /**
+     * 显式转为字符串
+     * 
+     * @access public
+     * @return string 两侧没有引号且反转义后的文本内容
+     */
     public function toString() {
         return str_replace(array('\\\\', '\\\''), array('\\', '\''), $this->value);
     }
 
+    /**
+     * 显式转为字符串
+     * 
+     * @access public
+     * @return string 两侧有引号且转义后的文本内容
+     */
     public function __toString() {
         return "'{$this->value}'";
     }
@@ -480,10 +492,22 @@ class DoubleQuotedText extends Value {
         $this->value = $text;
     }
 
+    /**
+     * 显式转为字符串
+     * 
+     * @access public
+     * @return string 两侧没有引号且反转义后的文本内容
+     */
     public function toString() {
         return stripcslashes($this->value);
     }
 
+    /**
+     * 显式转为字符串
+     * 
+     * @access public
+     * @return string 两侧有引号且转义后的文本内容
+     */
     public function __toString() {
         return "\"{$this->value}\"";
     }
@@ -519,10 +543,22 @@ class Regex extends Value {
         return @preg_match($regex, '') !== false;
     }
 
+    /**
+     * 显式转为字符串
+     * 
+     * @access public
+     * @return string 两侧没有引号也未被转义的正则表达式
+     */
     public function toString() {
         return "/{$this->value}/{$this->modifier}";
     }
 
+    /**
+     * 隐式转为字符串 魔术方法
+     * 
+     * @access public
+     * @return string 两侧有引号且转义后的正则表达式
+     */
     public function __toString() {
         return '\'/' . str_replace(array('\\', '\''), array('\\\\', '\\\''), $this->value) . "/{$this->modifier}'";
     }
@@ -581,22 +617,22 @@ abstract class Translator {
 class RuleTranslator extends Translator {
     public function nodeStartToken($node) {
         $result = '';
-        if ($node->parent instanceof Judge) {
+        if ($node->parent instanceof Judge) { // 对于上级节点是 Judge 的情况，需要添加前缀
             if ($node === $node->parent->then) $result .= ' : ';
             elseif ($node === $node->parent->else) $result .= ' ! ';
         }
         if ($node instanceof Judge) {
-            if ($node->target instanceof Regex) $target = $node->target->toString();
-            else $target = strval($node->target);
-            $result .= "[ {$node->name} {$node->optr} {$target} ]";
+            if ($node->target instanceof Regex) $target = $node->target->toString(); // 此时需要一个不在引号内的正则
+            else $target = strval($node->target); // 避免对象引用
+            $result .= "[ {$node->name} {$node->optr} {$target} ]"; // 组装条件块
         } elseif ($node instanceof Value) {
-            $result .= $node;
+            $result .= $node; // Value::__toString() 方法将会隐式调用
         }
         return $result;
     }
 
     public function nodeEndToken($node) {
-        if ($node instanceof Judge) return ' ;';
+        if ($node instanceof Judge) return ' ;'; // Judge 的结束标记
         return '';
     }
 }
@@ -609,30 +645,30 @@ class PhpTranslator extends Translator {
         $result = '';
         if ($node->parent instanceof Judge && $node === $node->parent->else) $result .= ' } else { ';
         if ($node instanceof Root) {
-            $result .= "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n";
+            $result .= "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n"; // 文件头
         } elseif ($node instanceof Judge) {
             $result .= 'if (';
             $origin_text = false;
-            if ($node->target instanceof DoubleQuotedText) {
-                $origin_text = $node->target->value;
+            if ($node->target instanceof DoubleQuotedText) { // 处理双引号中可能有的未转义的 `$`
+                $origin_text = $node->target->value; // 临时保存原文本以便稍后复原
                 $new_text = '';
                 $len = strlen($origin_text);
                 $backslash = false;
-                for ($i = 0; $i < $len; $new_text .= $origin_text[$i], $i++) {
+                for ($i = 0; $i < $len; $new_text .= $origin_text[$i], $i++) { // 魔法
                     if ($backslash) {
                         $backslash = false;
                         continue;
                     }
                     if ($origin_text[$i] == '\\') $backslash = true;
-                    elseif ($origin_text[$i] == '$') $new_text .= '\\';
+                    elseif ($origin_text[$i] == '$') $new_text .= '\\'; // 没有与 `$` 搭配的反斜线，补充一个
                 }
                 $node->target->value = $new_text;
             }
-            if ($node->optr == '<-') {
+            if ($node->optr == '<-') { // 不是 PHP 运算符，需要详细翻译
                 if (!$node->target instanceof Value || $node->target instanceof Regex)
                     throw new Exception('<code>&lt;-</code> 运算符的右侧应当为文本。');
-                $result .= "stripos(\$params['{$node->name}'], {$node->target}) !== false";
-            } elseif ($node->optr == '~') {
+                $result .= "stripos(\$params['{$node->name}'], {$node->target}) !== false"; // 目前版本默认忽略大小写
+            } elseif ($node->optr == '~') { // 同上
                 if (!$node->target instanceof Regex)
                     throw new Exception('<code>~</code> 运算符只允许与正则字面量搭配使用。');
                 $result .= "preg_match({$node->target}, \$params['{$node->name}']) === 1";
@@ -641,7 +677,7 @@ class PhpTranslator extends Translator {
                     throw new Exception('正则字面量只允许与 <code>~</code> 运算符搭配使用。');
                 $result .= "\$params['{$node->name}'] {$node->optr} {$node->target}";
             }
-            if ($origin_text !== false) $node->target->value = $origin_text;
+            if ($origin_text !== false) $node->target->value = $origin_text; // 复原双引号原文本
             $result .= ') { ';
         } elseif ($node instanceof Value) {
             if ($node->type == 'signal') {
@@ -665,7 +701,7 @@ class PhpTranslator extends Translator {
  */
 class JsonTranslator extends Translator {
     /**
-     * JSON 数组
+     * JSON 结构数组
      * 
      * @access protected
      * @var array
@@ -689,16 +725,19 @@ class JsonTranslator extends Translator {
     protected $flags;
 
     public function nodeStartToken($node) {
-        if ($node instanceof Root) {
+        // JsonTranslator 的处理方法与 RuleTranslator 和 PhpTranslator 不同
+        // 后两者是直接根据对应节点生成翻译文本，而 JsonTranslator 则是生成以数组形式储存的 JSON 结构
+        // 相当于把 Rule AST 先翻译为 JSON 结构，再进行序列化
+        if ($node instanceof Root) { // 初始化结构与标志量
             $this->json = array();
             $this->count = 0;
             $this->flags = array();
         } elseif ($node instanceof Judge) {
             if ($node->parent instanceof Root) $flag = '#Main';
             else {
-                $this->count++;
+                $this->count++; // 分配一个新的编号
                 $flag = "#{$this->count}";
-                $parent_flag = end($this->flags);
+                $parent_flag = end($this->flags); // 从栈中取出父节点 flag
                 if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = $flag;
                 elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = $flag;
             }
@@ -710,11 +749,11 @@ class JsonTranslator extends Translator {
                 'optr' => strval($node->optr),
                 'target' => $target,
                 'parent' => $flag == '#Main' ? null : $parent_flag,
-                'then' => null,
+                'then' => null, // 此时不设置子节点，而是由子节点设置父节点
                 'else' => null,
             );
-            array_push($this->flags, $flag);
-            $this->json[$flag] = $judge;
+            array_push($this->flags, $flag); // 当前 flag 入栈，便于子节点查找父节点
+            $this->json[$flag] = $judge; // 维护 JSON 结构数组
         } elseif ($node instanceof Value) {
             $parent_flag = end($this->flags);
             if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = strval($node);
@@ -724,7 +763,7 @@ class JsonTranslator extends Translator {
     }
 
     public function nodeEndToken($node) {
-        if ($node instanceof Root) return json_encode($this->json);
+        if ($node instanceof Root) return json_encode($this->json); // 此时，结构转换已经全部完成，将其序列化后返回
         if ($node instanceof Judge) array_pop($this->flags);
         return '';
     }
