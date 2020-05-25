@@ -20,7 +20,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 transform: scaleX(0)!important;
             }
             .judge-block {
-                margin-bottom: 0.5em;
+                margin-top: 0.5em;
             }
             .judge-block-label {
                 box-sizing: border-box;
@@ -49,7 +49,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
             .judge-block-content>div:nth-child(2) {
                 margin-top: 10px;
             }
-            .judge-target textarea {
+            .judge-target textarea, #text-mode textarea {
                 font-family: Consolas,Courier,'Courier New',monospace;
                 cursor: text!important;
             }
@@ -173,60 +173,69 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     <div class="mdui-textfield-error">请输入一个 0 到 99999 范围内的整数</div>
                 </div>
                 <label class="mdui-textfield-label">规则内容</label>
-                <div class="judge-block" data-flag="#Main">
-                    <div class="judge-block-label">#Main</div>
-                    <div class="judge-block-content">
-                        <div>
-                            若&emsp;
-                            <select class="mdui-select judge-name" mdui-select>
-                                <option value="uid">UID</option>
-                                <option value="nick">昵称</option>
-                                <option value="email">邮箱</option>
-                                <option value="url">个人主页</option>
-                                <option value="content">评论内容</option>
-                                <option value="length">评论有效长度</option>
-                                <option value="ip">IP</option>
-                                <option value="ua">User-Agent</option>
-                            </select>
-                            &emsp;
-                            <select class="mdui-select judge-optr" mdui-select>
-                                <option value="==">等于</option>
-                                <option value="!=">不等于</option>
-                                <option value="<">小于</option>
-                                <option value=">">大于</option>
-                                <option value="<=">小于或等于</option>
-                                <option value=">=">大于或等于</option>
-                            </select>
-                            &emsp;
-                            <div class="mdui-textfield judge-target judge-target-value">
-                                <input class="mdui-textfield-input" type="number" placeholder="数值" required>
+                <button id="mode-change" class="mdui-btn mdui-ripple">切换到规则文本编辑模式</button>
+                <div id="graphical-mode">
+                    <div class="judge-block" data-flag="#Main">
+                        <div class="judge-block-label">#Main</div>
+                        <div class="judge-block-content">
+                            <div>
+                                若&emsp;
+                                <select class="mdui-select judge-name" mdui-select>
+                                    <option value="uid">UID</option>
+                                    <option value="nick">昵称</option>
+                                    <option value="email">邮箱</option>
+                                    <option value="url">个人主页</option>
+                                    <option value="content">评论内容</option>
+                                    <option value="length">评论有效长度</option>
+                                    <option value="ip">IP</option>
+                                    <option value="ua">User-Agent</option>
+                                </select>
+                                &emsp;
+                                <select class="mdui-select judge-optr" mdui-select>
+                                    <option value="==">等于</option>
+                                    <option value="!=">不等于</option>
+                                    <option value="<">小于</option>
+                                    <option value=">">大于</option>
+                                    <option value="<=">小于或等于</option>
+                                    <option value=">=">大于或等于</option>
+                                </select>
+                                &emsp;
+                                <div class="mdui-textfield judge-target judge-target-value">
+                                    <input class="mdui-textfield-input" type="number" placeholder="数值" required>
+                                </div>
+                            </div>
+                            <div>
+                                则&emsp;
+                                <select class="mdui-select judge-then" mdui-select>
+                                    <option value="skip">无动作</option>
+                                    <option value="accept">通过评论（白名单）</option>
+                                    <option value="review">标记为待审核</option>
+                                    <option value="spam">标记为垃圾</option>
+                                    <option value="deny">拒绝评论</option>
+                                    <option value="judge">继续判断</option>
+                                </select>
+                                <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-then-pos mdui-btn mdui-ripple"></button></span>
+                                &emsp;否则&emsp;
+                                <select class="mdui-select judge-else" mdui-select>
+                                    <option value="skip">无动作</option>
+                                    <option value="accept">通过评论（白名单）</option>
+                                    <option value="review">标记为待审核</option>
+                                    <option value="spam">标记为垃圾</option>
+                                    <option value="deny">拒绝评论</option>
+                                    <option value="judge">继续判断</option>
+                                </select>
+                                <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-else-pos mdui-btn mdui-ripple"></button></span>
                             </div>
                         </div>
-                        <div>
-                            则&emsp;
-                            <select class="mdui-select judge-then" mdui-select>
-                                <option value="nothing">无动作</option>
-                                <option value="accept">通过评论（白名单）</option>
-                                <option value="review">标记为待审核</option>
-                                <option value="spam">标记为垃圾</option>
-                                <option value="deny">拒绝评论</option>
-                                <option value="judge">继续判断</option>
-                            </select>
-                            <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-then-pos mdui-btn mdui-ripple"></button></span>
-                            &emsp;否则&emsp;
-                            <select class="mdui-select judge-else" mdui-select>
-                                <option value="nothing">无动作</option>
-                                <option value="accept">通过评论（白名单）</option>
-                                <option value="review">标记为待审核</option>
-                                <option value="spam">标记为垃圾</option>
-                                <option value="deny">拒绝评论</option>
-                                <option value="judge">继续判断</option>
-                            </select>
-                            <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-else-pos mdui-btn mdui-ripple"></button></span>
-                        </div>
+                    </div>
+                    <div class="judge-addition"></div>
+                </div>
+                <div id="text-mode" class="mdui-hidden">
+                    <div class="mdui-textfield">
+                        <textarea class="mdui-textfield-input" rows="20"></textarea>
+                        <div class="mdui-textfield-helper">在这里书写规则文本，允许多行，规则语法详见<a href="javascript:void(0)" onclick="mdui.Tab('.mdui-container>.mdui-tab').show(2);">配置指南</a></div>
                     </div>
                 </div>
-                <div class="judge-addition"></div>
             </div>
             <div id="guide" class="mdui-typo mdui-p-a-2">
                 <h2>教程：如何优雅地使用评论规则集 <small>文档版本：v1.0</small></h2>
@@ -406,7 +415,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                     <div>
                                         则&emsp;
                                         <select class="mdui-select judge-then" mdui-select>
-                                            <option value="nothing">无动作</option>
+                                            <option value="skip">无动作</option>
                                             <option value="accept">通过评论（白名单）</option>
                                             <option value="review">标记为待审核</option>
                                             <option value="spam">标记为垃圾</option>
@@ -416,7 +425,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                         <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-then-pos mdui-btn mdui-ripple"></button></span>
                                         &emsp;否则&emsp;
                                         <select class="mdui-select judge-else" mdui-select>
-                                            <option value="nothing">无动作</option>
+                                            <option value="skip">无动作</option>
                                             <option value="accept">通过评论（白名单）</option>
                                             <option value="review">标记为待审核</option>
                                             <option value="spam">标记为垃圾</option>
@@ -451,6 +460,41 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                         $mark.text('').off('click');
                         $mark.parent().addClass('mdui-hidden');
                     }
+                });
+                const html2Rule = function(flag) {
+                    var $node = $$(`div.judge-block[data-flag="${flag}"]`);
+                    var name = $node.find('.judge-name').val();
+                    var optr = $node.find('.judge-optr').val();
+                    var target = $node.find('.judge-target .mdui-textfield-input').val();
+                    if (name != 'uid' && name != 'length' && optr != '~')
+                        target = `'${target.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'`;
+                    var judge_then = $node.find('.judge-then').val();
+                    var judge_else = $node.find('.judge-else').val();
+                    var res = `[ ${name} ${optr} ${target} ] : `;
+                    if (judge_then == 'judge') res += html2Rule($node.find('.judge-then-pos').text());
+                    else res += judge_then;
+                    res += ' ! ';
+                    if (judge_else == 'judge') res += html2Rule($node.find('.judge-else-pos').text());
+                    else res += judge_else;
+                    return res + ' ;';
+                };
+                $$('#mode-change').on('click', function() {
+                    var e = this;
+                    mdui.confirm('确定要切换吗？由于对已有内容的转换不保证 100% 兼容，我们更建议仅使用一种方法来描述规则。（如果您还没有开始描述规则，请忽略该提示直接点击确定）', '提示', function() {
+                        if ($$(e).text() == '切换到规则文本编辑模式') {
+                            $$(e).text('切换到所见即所得编辑模式');
+                            $$('#graphical-mode').addClass('mdui-hidden');
+                            $$('#text-mode').removeClass('mdui-hidden');
+                            $$('#text-mode textarea').val(html2Rule('#Main'));
+                            mdui.updateTextFields('#text-mode .mdui-textfield');
+                        } else {
+                            $$(e).text('切换到规则文本编辑模式');
+                            $$('#graphical-mode').removeClass('mdui-hidden');
+                            $$('#text-mode').addClass('mdui-hidden');
+                            var rule = $$('#text-mode textarea').val();
+                            // 请求后端
+                        }
+                    }, function() {}, {confirmText: '确定', cancelText: '取消'});
                 });
             });
         </script>
