@@ -232,7 +232,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 </div>
                 <div id="text-mode" class="mdui-hidden">
                     <div class="mdui-textfield">
-                        <textarea class="mdui-textfield-input" rows="20"></textarea>
+                        <textarea class="mdui-textfield-input" rows="15"></textarea>
                         <div class="mdui-textfield-helper">在这里书写规则文本，允许多行，规则语法详见<a href="javascript:void(0)" onclick="mdui.Tab('.mdui-container>.mdui-tab').show(2);">配置指南</a></div>
                     </div>
                 </div>
@@ -248,6 +248,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
 ├───mdui
 └───runtime</code></pre>
                 <p>其中 <code>libs</code> 和 <code>mdui</code> 目录是固有的，运行时不会被修改；<code>runtime</code> 目录是动态生成的，<strong>必须可写且可执行</strong>，将会存放插件的一些必要数据。</p>
+                <p>如果您是直接 clone repo 或从 GitHub 上 Download ZIP 得到的插件文件，则可能还有一个 <code>test</code> 目录，其中存放了笔者开发时用于测试的文件，它不是必需的，并且有时还可能带来隐患，笔者建议删除它。</p>
                 <p><strong>请注意：在插件处于启用状态时，笔者不建议在任何情况下修改或删除插件目录中的文件。</strong></p>
                 <p><code>libs</code> 目录用于存放插件用到的额外 PHP 库。其中 <code>MenuOutputer.php</code> 是笔者在 Typecho 原生后台菜单输出组件的基础上编写的用于适配 MDUI 的菜单输出组件，按照 Typecho 的要求以 <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank">GNU General Public License v2.0</a> 进行许可；<code>RuleCompiler.php</code> 是笔者编写的一个将笔者设计的“规则语言”编译到 PHP 的小型编译器（当然，没有什么特别复杂的结构，只是一个简单的工具库），以 <a href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">GNU Affero General Public License v3.0</a> 进行许可。</p>
                 <p><code>mdui</code> 目录用于存放本地 MDUI 库，该库以 <a href="https://mit-license.org/" target="_blank">MIT License</a> 进行许可。</p>
