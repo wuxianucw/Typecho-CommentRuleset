@@ -481,7 +481,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 };
                 $$('#mode-change').on('click', function() {
                     var e = this;
-                    mdui.confirm('确定要切换吗？由于对已有内容的转换不保证 100% 兼容，我们更建议仅使用一种方法来描述规则。（如果您还没有开始描述规则，请忽略该提示直接点击确定）', '提示', function() {
+                    mdui.confirm('确定要切换吗？由于对已有内容的转换不保证 100% 兼容，我们更建议仅使用一种模式来编辑规则。（如果您还没有开始描述规则，请忽略该提示直接点击确定）', '提示', function() {
                         if ($$(e).text() == '切换到规则文本编辑模式') {
                             $$(e).text('切换到所见即所得编辑模式');
                             $$('#graphical-mode').addClass('mdui-hidden');
