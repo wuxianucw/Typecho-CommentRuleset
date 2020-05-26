@@ -343,7 +343,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                         $normal.removeClass('mdui-hidden');
                     }
                 });
-                const onNameChange = function() {
+                $$(document).on('change', '#new-rule .judge-block .judge-name', function() {
                     var $optr, $target;
                     if ($$(this).val() == 'uid' || $$(this).val() == 'length') {
                         $optr = $$(this).parent().find('.judge-optr').html(`
@@ -371,9 +371,8 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     }
                     mdui.Select($optr).handleUpdate();
                     mdui.updateTextFields($target);
-                };
-                $$('#new-rule .judge-block .judge-name').on('change', onNameChange);
-                $$('#new-rule .judge-block .judge-then, #new-rule .judge-block .judge-else').on('change', function() {
+                });
+                $$(document).on('change', '#new-rule .judge-block .judge-then, #new-rule .judge-block .judge-else', function() {
                     var type = $$(this).hasClass('judge-then') ? 'then' : 'else';
                     var $mark = $$(this).parent().find(`.judge-${type}-pos`);
                     var hidden = $mark.parent().hasClass('mdui-hidden');
@@ -438,29 +437,19 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                 </div>
                             </div>
                         `).find(`div.judge-block[data-flag="${pos}"]`).mutation();
-                        $pos.find('.judge-name').on('change', onNameChange);
-                        $pos.find('.judge-then, .judge-else').on('change', arguments.callee);
-                        $pos.find('.judge-back').on('click', function() {
-                            var $flag = $$(`#new-rule div.judge-block[data-flag="${flag}"]`);
-                            window.scrollTo(0, $flag.offset().top - 72);
-                            $flag.find('.judge-block-label').addClass('judge-block-label-highlight');
-                            $$.throttle(function() {
-                                $flag.find('.judge-block-label').removeClass('judge-block-label-highlight');
-                            }, 1000)();
-                        });
-                        $mark.text(pos).on('click', function() {
-                            window.scrollTo(0, $pos.offset().top - 72);
-                            $pos.find('.judge-block-label').addClass('judge-block-label-highlight');
-                            $$.throttle(function() {
-                                $pos.find('.judge-block-label').removeClass('judge-block-label-highlight');
-                            }, 1000)();
-                        });
-                        $mark.parent().removeClass('mdui-hidden');
+                        $mark.text(pos).parent().removeClass('mdui-hidden');
                     } else if (!hidden) {
                         $$(`div.judge-block[data-flag="${$mark.text()}"]`).removeBlock();
-                        $mark.text('').off('click');
-                        $mark.parent().addClass('mdui-hidden');
+                        $mark.text('').parent().addClass('mdui-hidden');
                     }
+                });
+                $$(document).on('click', '#new-rule .judge-block .judge-then-pos, #new-rule .judge-block .judge-else-pos, #new-rule .judge-block .judge-back', function() {
+                    var $flag = $$(`#new-rule div.judge-block[data-flag="${$$(this).text()}"]`);
+                    window.scrollTo(0, $flag.offset().top - 72);
+                    $flag.find('.judge-block-label').addClass('judge-block-label-highlight');
+                    $$.throttle(function() {
+                        $flag.find('.judge-block-label').removeClass('judge-block-label-highlight');
+                    }, 1000)();
                 });
                 const html2Rule = function(flag) {
                     var $node = $$(`div.judge-block[data-flag="${flag}"]`);
@@ -481,7 +470,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 };
                 $$('#mode-change').on('click', function() {
                     var e = this;
-                    mdui.confirm('确定要切换吗？由于对已有内容的转换不保证 100% 兼容，我们更建议仅使用一种模式来编辑规则。（如果您还没有开始描述规则，请忽略该提示直接点击确定）', '提示', function() {
+                    mdui.confirm('确定要切换吗？由于对已有内容的转换不保证 100% 兼容，我们更建议仅使用一种模式来编辑规则。（如果您还没有开始编辑规则，请忽略该提示直接点击确定）', '提示', function() {
                         if ($$(e).text() == '切换到规则文本编辑模式') {
                             $$(e).text('切换到所见即所得编辑模式');
                             $$('#graphical-mode').addClass('mdui-hidden');
