@@ -272,6 +272,9 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 <p>如标题所述，是一个编译错误参考。</p>
             </div>
         </div>
+        <div id="loading" class="mdui-dialog mdui-dialog-alert" style="text-align: center;">
+            <div class="mdui-dialog-content"><div class="mdui-spinner"></div></div>
+        </div>
         <script src="<?php CommentRuleset_Plugin::mdui() ?>/js/mdui.min.js?v=0.4.3"></script>
         <script>
             var $$ = mdui.JQ;
@@ -290,9 +293,19 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     if (!$else.parent().hasClass('mdui-hidden')) $$(`div[data-flag="${$else.text()}"]`).removeBlock();
                     this.remove();
                     return;
+                },
+                select(value) {
+                    this.find(`[value="${value}"]`).prop('selected', true);
+                    mdui.Select(this).handleUpdate();
+                    return this;
                 }
             });
             $$(function() {
+                var loading = new mdui.Dialog('#loading', {
+                    history: false,
+                    modal: true,
+                    closeOnEsc: false
+                });
                 $$('button#add-rule').on('click', function() {
                     mdui.Tab('.mdui-container>.mdui-tab').show(1);
                 });
@@ -372,6 +385,65 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     mdui.Select($optr).handleUpdate();
                     mdui.updateTextFields($target);
                 });
+                const insertBlock = function(flag, parent) {
+                    return $$('#new-rule .judge-addition').append(`
+                        <div class="judge-block" data-flag="${flag}">
+                            <div class="judge-block-label">${flag}</div>
+                            <div class="judge-block-content">
+                                <div>
+                                    <i class="mdui-icon material-icons">arrow_upward</i>
+                                    <button class="judge-back mdui-btn mdui-ripple">${parent}</button>
+                                    &emsp;若&emsp;
+                                    <select class="mdui-select judge-name" mdui-select>
+                                        <option value="uid">UID</option>
+                                        <option value="nick">昵称</option>
+                                        <option value="email">邮箱</option>
+                                        <option value="url">个人主页</option>
+                                        <option value="content">评论内容</option>
+                                        <option value="length">评论有效长度</option>
+                                        <option value="ip">IP</option>
+                                        <option value="ua">User-Agent</option>
+                                    </select>
+                                    &emsp;
+                                    <select class="mdui-select judge-optr" mdui-select>
+                                        <option value="==">等于</option>
+                                        <option value="!=">不等于</option>
+                                        <option value="<">小于</option>
+                                        <option value=">">大于</option>
+                                        <option value="<=">小于或等于</option>
+                                        <option value=">=">大于或等于</option>
+                                    </select>
+                                    &emsp;
+                                    <div class="mdui-textfield judge-target judge-target-value">
+                                        <input class="mdui-textfield-input" type="number" placeholder="数值" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    则&emsp;
+                                    <select class="mdui-select judge-then" mdui-select>
+                                        <option value="skip">无动作</option>
+                                        <option value="accept">通过评论（白名单）</option>
+                                        <option value="review">标记为待审核</option>
+                                        <option value="spam">标记为垃圾</option>
+                                        <option value="deny">拒绝评论</option>
+                                        <option value="judge">继续判断</option>
+                                    </select>
+                                    <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-then-pos mdui-btn mdui-ripple"></button></span>
+                                    &emsp;否则&emsp;
+                                    <select class="mdui-select judge-else" mdui-select>
+                                        <option value="skip">无动作</option>
+                                        <option value="accept">通过评论（白名单）</option>
+                                        <option value="review">标记为待审核</option>
+                                        <option value="spam">标记为垃圾</option>
+                                        <option value="deny">拒绝评论</option>
+                                        <option value="judge">继续判断</option>
+                                    </select>
+                                    <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-else-pos mdui-btn mdui-ripple"></button></span>
+                                </div>
+                            </div>
+                        </div>
+                    `).find(`div.judge-block[data-flag="${flag}"]`).mutation();
+                };
                 $$(document).on('change', '#new-rule .judge-block .judge-then, #new-rule .judge-block .judge-else', function() {
                     var type = $$(this).hasClass('judge-then') ? 'then' : 'else';
                     var $mark = $$(this).parent().find(`.judge-${type}-pos`);
@@ -379,64 +451,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     if ($$(this).val() == 'judge') {
                         if (!hidden) return;
                         var pos = $$.randomFlag();
-                        var flag = $$(this).parentsUntil('.judge-block').last().parent().data('flag');
-                        var $pos = $$('#new-rule .judge-addition').append(`
-                            <div class="judge-block" data-flag="${pos}">
-                                <div class="judge-block-label">${pos}</div>
-                                <div class="judge-block-content">
-                                    <div>
-                                        <i class="mdui-icon material-icons">arrow_upward</i>
-                                        <button class="judge-back mdui-btn mdui-ripple">${flag}</button>
-                                        &emsp;若&emsp;
-                                        <select class="mdui-select judge-name" mdui-select>
-                                            <option value="uid">UID</option>
-                                            <option value="nick">昵称</option>
-                                            <option value="email">邮箱</option>
-                                            <option value="url">个人主页</option>
-                                            <option value="content">评论内容</option>
-                                            <option value="length">评论有效长度</option>
-                                            <option value="ip">IP</option>
-                                            <option value="ua">User-Agent</option>
-                                        </select>
-                                        &emsp;
-                                        <select class="mdui-select judge-optr" mdui-select>
-                                            <option value="==">等于</option>
-                                            <option value="!=">不等于</option>
-                                            <option value="<">小于</option>
-                                            <option value=">">大于</option>
-                                            <option value="<=">小于或等于</option>
-                                            <option value=">=">大于或等于</option>
-                                        </select>
-                                        &emsp;
-                                        <div class="mdui-textfield judge-target judge-target-value">
-                                            <input class="mdui-textfield-input" type="number" placeholder="数值" required>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        则&emsp;
-                                        <select class="mdui-select judge-then" mdui-select>
-                                            <option value="skip">无动作</option>
-                                            <option value="accept">通过评论（白名单）</option>
-                                            <option value="review">标记为待审核</option>
-                                            <option value="spam">标记为垃圾</option>
-                                            <option value="deny">拒绝评论</option>
-                                            <option value="judge">继续判断</option>
-                                        </select>
-                                        <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-then-pos mdui-btn mdui-ripple"></button></span>
-                                        &emsp;否则&emsp;
-                                        <select class="mdui-select judge-else" mdui-select>
-                                            <option value="skip">无动作</option>
-                                            <option value="accept">通过评论（白名单）</option>
-                                            <option value="review">标记为待审核</option>
-                                            <option value="spam">标记为垃圾</option>
-                                            <option value="deny">拒绝评论</option>
-                                            <option value="judge">继续判断</option>
-                                        </select>
-                                        <span class="mdui-hidden">&emsp;<i class="mdui-icon material-icons">arrow_downward</i><button class="judge-else-pos mdui-btn mdui-ripple"></button></span>
-                                    </div>
-                                </div>
-                            </div>
-                        `).find(`div.judge-block[data-flag="${pos}"]`).mutation();
+                        insertBlock(pos, $$(this).parentsUntil('.judge-block').last().parent().data('flag'));
                         $mark.text(pos).parent().removeClass('mdui-hidden');
                     } else if (!hidden) {
                         $$(`div.judge-block[data-flag="${$mark.text()}"]`).removeBlock();
@@ -478,11 +493,58 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                             $$('#text-mode textarea').val(html2Rule('#Main'));
                             mdui.updateTextFields('#text-mode .mdui-textfield');
                         } else {
-                            $$(e).text('切换到规则文本编辑模式');
-                            $$('#graphical-mode').removeClass('mdui-hidden');
-                            $$('#text-mode').addClass('mdui-hidden');
                             var rule = $$('#text-mode textarea').val();
-                            // 请求后端
+                            if (rule == '') {
+                                $$(e).text('切换到规则文本编辑模式');
+                                $$('#graphical-mode').removeClass('mdui-hidden');
+                                $$('#text-mode').addClass('mdui-hidden');
+                                return;
+                            }
+                            loading.open();
+                            $$.ajax({
+                                method: 'POST',
+                                url: '<?php $options->index('/action/manage-commentruleset?a=translate'); ?>',
+                                data: {input: rule},
+                                dataType: 'json',
+                                success(data, textStatus, xhr) {
+                                    loading.close();
+                                    if (xhr.status == 200) {
+                                        $$(e).text('切换到规则文本编辑模式');
+                                        $$('#graphical-mode').removeClass('mdui-hidden');
+                                        $$('#text-mode').addClass('mdui-hidden');
+                                        if (data['#Main'] != null) {
+                                            $$('#new-rule .judge-addition').html('');
+                                            $$.each(data, function(flag, block) {
+                                                var $block;
+                                                if (flag == '#Main') $block = $$('#new-rule .judge-block[data-flag="#Main"]');
+                                                else $block = insertBlock(flag, block['parent']);
+                                                $block.find('.judge-name').select(block['name']).trigger('change');
+                                                $block.find('.judge-optr').select(block['optr']).trigger('change');
+                                                $block.find('.judge-target .mdui-textfield-input').val(block['target']);
+                                                mdui.updateTextFields($block.find('.judge-target'));
+                                                if (block['then'].indexOf('#') != -1) {
+                                                    $block.find('.judge-then').select('judge');
+                                                    $block.find('.judge-then-pos').text(block['then']).parent().removeClass('mdui-hidden');
+                                                } else $block.find('.judge-then').select(block['then']);
+                                                if (block['else'].indexOf('#') != -1) {
+                                                    $block.find('.judge-else').select('judge');
+                                                    $block.find('.judge-else-pos').text(block['else']).parent().removeClass('mdui-hidden');
+                                                } else $block.find('.judge-else').select(block['else']);
+                                            });
+                                        }
+                                    } else if (xhr.status == 204) {
+                                        $$(e).text('切换到规则文本编辑模式');
+                                        $$('#graphical-mode').removeClass('mdui-hidden');
+                                        $$('#text-mode').addClass('mdui-hidden');
+                                    } else {
+                                        mdui.alert(`规则编译失败！<br>${data.result}<br>如果要强制切换，请将输入框清空。`, '错误', function() {}, {confirmText: '确定'});
+                                    }
+                                },
+                                error(xhr, textStatus) {
+                                    loading.close();
+                                    mdui.alert(`请求出错。（${textStatus}）`, '错误', function() {}, {confirmText: '确定'});
+                                }
+                            });
                         }
                     }, function() {}, {confirmText: '确定', cancelText: '取消'});
                 });
