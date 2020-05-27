@@ -506,8 +506,12 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                 url: '<?php $options->index('/action/manage-commentruleset?a=translate'); ?>',
                                 data: {input: rule},
                                 dataType: 'json',
+                                complete() {
+                                    setTimeout(function() {
+                                        loading.close();
+                                    }, 100);
+                                },
                                 success(data, textStatus, xhr) {
-                                    loading.close();
                                     if (xhr.status == 200) {
                                         $$(e).text('切换到规则文本编辑模式');
                                         $$('#graphical-mode').removeClass('mdui-hidden');
@@ -541,7 +545,6 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                     }
                                 },
                                 error(xhr, textStatus) {
-                                    loading.close();
                                     mdui.alert(`请求出错。（${textStatus}）`, '错误', function() {}, {confirmText: '确定'});
                                 }
                             });
