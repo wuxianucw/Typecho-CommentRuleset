@@ -511,7 +511,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                         loading.close();
                                     }, 100);
                                 },
-                                success(data, textStatus, xhr) {
+                                success(data, _, xhr) {
                                     if (xhr.status == 200) {
                                         $$(e).text('切换到规则文本编辑模式');
                                         $$('#graphical-mode').removeClass('mdui-hidden');
@@ -544,8 +544,8 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                         mdui.alert(`<div class="mdui-typo">规则编译失败！<br>${data.result}<br>如果要强制切换，请将输入框清空。</div>`, '错误', function() {}, {confirmText: '确定'});
                                     }
                                 },
-                                error(xhr, textStatus) {
-                                    mdui.alert(`请求出错。（${textStatus}）`, '错误', function() {}, {confirmText: '确定'});
+                                error(xhr) {
+                                    mdui.alert(`请求出错。（${xhr.status} ${xhr.statusText}）`, '错误', function() {}, {confirmText: '确定'});
                                 }
                             });
                         }
