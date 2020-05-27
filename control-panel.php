@@ -537,7 +537,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                         $$('#graphical-mode').removeClass('mdui-hidden');
                                         $$('#text-mode').addClass('mdui-hidden');
                                     } else {
-                                        mdui.alert(`规则编译失败！<br>${data.result}<br>如果要强制切换，请将输入框清空。`, '错误', function() {}, {confirmText: '确定'});
+                                        mdui.alert(`<div class="mdui-typo">规则编译失败！<br>${data.result}<br>如果要强制切换，请将输入框清空。</div>`, '错误', function() {}, {confirmText: '确定'});
                                     }
                                 },
                                 error(xhr, textStatus) {
