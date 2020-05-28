@@ -157,7 +157,14 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 </div>
             </div>
             <div id="new-rule" class="mdui-typo mdui-p-a-2">
-                <div class="mdui-textfield mdui-textfield-floating-label">
+                <div>
+                    <span class="mdui-typo-caption-opacity">是否生效：</span>
+                    <label class="mdui-switch">
+                        <input type="checkbox" name="active" checked>
+                        <i class="mdui-switch-icon"></i>
+                    </label>
+                </div>
+                <div class="mdui-textfield">
                     <label class="mdui-textfield-label">规则名称</label>
                     <input class="mdui-textfield-input" name="name" type="text" required>
                     <div class="mdui-textfield-error">规则名称不能为空</div>
@@ -235,6 +242,10 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                         <textarea class="mdui-textfield-input" rows="15"></textarea>
                         <div class="mdui-textfield-helper">在这里书写规则文本，允许多行，规则语法详见<a href="javascript:void(0)" onclick="mdui.Tab('.mdui-container>.mdui-tab').show(2);">配置指南</a></div>
                     </div>
+                </div>
+                <div id="new-rule-control" class="mdui-m-t-3">
+                    <p class="mdui-typo-caption-opacity status"><i class="mdui-icon material-icons" style="font-size: 13px;font-weight: bold;">adjust</i> <span>未保存</span></p>
+                    <button class="mdui-btn mdui-color-theme-accent mdui-ripple">保存规则</button>
                 </div>
             </div>
             <div id="guide" class="mdui-typo mdui-p-a-2">
