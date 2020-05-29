@@ -158,7 +158,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
             </div>
             <div id="new-rule" class="mdui-typo mdui-p-a-2">
                 <div>
-                    <span class="mdui-typo-caption-opacity">是否生效：</span>
+                    <span class="mdui-typo-caption mdui-text-color-grey">是否生效：</span>
                     <label class="mdui-switch">
                         <input type="checkbox" name="active" checked>
                         <i class="mdui-switch-icon"></i>
@@ -244,7 +244,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     </div>
                 </div>
                 <div id="new-rule-control" class="mdui-m-t-3">
-                    <p class="mdui-typo-caption-opacity status"><i class="mdui-icon material-icons" style="font-size: 13px;font-weight: bold;">adjust</i> <span>未保存</span></p>
+                    <p class="mdui-typo-caption status mdui-text-color-grey"><i class="mdui-icon material-icons" style="font-size: 13px;font-weight: bold;">adjust</i> <span>未保存</span></p>
                     <button class="mdui-btn mdui-color-theme-accent mdui-ripple">保存规则</button>
                 </div>
             </div>
@@ -317,6 +317,23 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     modal: true,
                     closeOnEsc: false
                 });
+                var status = {
+                    $status: $$('#new-rule #new-rule-control .status'),
+                    color: 'grey',
+                    set(icon, text, color = '') {
+                        this.$status.find('i').text(icon);
+                        this.$status.find('span').text(text);
+                        if (color != this.color) {
+                            if (this.color != '') this.$status.removeClass(`mdui-text-color-${this.color}`);
+                            if (color != '') this.$status.addClass(`mdui-text-color-${color}`);
+                            this.color = color;
+                        }
+                    },
+                    isOk() { return this.$status.find('i').text() == 'check'; },
+                    unsaved() { this.set('adjust', '未保存', 'grey'); },
+                    ok() { this.set('check', '已保存', 'green'); },
+                    uncompiled() { this.set('error_outline', '未编译', 'amber'); }
+                };
                 $$('button#add-rule').on('click', function() {
                     mdui.Tab('.mdui-container>.mdui-tab').show(1);
                 });
@@ -368,6 +385,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     }
                 });
                 $$(document).on('change', '#new-rule .judge-block .judge-name', function() {
+                    status.unsaved();
                     var $optr, $target;
                     if ($$(this).val() == 'uid' || $$(this).val() == 'length') {
                         $optr = $$(this).parent().find('.judge-optr').html(`
@@ -396,6 +414,11 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     mdui.Select($optr).handleUpdate();
                     mdui.updateTextFields($target);
                 });
+                $$(document).on(
+                    'change',
+                    '#new-rule input, #new-rule textarea',
+                    function() { status.unsaved(); }
+                );
                 const insertBlock = function(flag, parent) {
                     return $$('#new-rule .judge-addition').append(`
                         <div class="judge-block" data-flag="${flag}">
@@ -456,6 +479,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                     `).find(`div.judge-block[data-flag="${flag}"]`).mutation();
                 };
                 $$(document).on('change', '#new-rule .judge-block .judge-then, #new-rule .judge-block .judge-else', function() {
+                    status.unsaved();
                     var type = $$(this).hasClass('judge-then') ? 'then' : 'else';
                     var $mark = $$(this).parent().find(`.judge-${type}-pos`);
                     var hidden = $mark.parent().hasClass('mdui-hidden');
