@@ -64,6 +64,7 @@ class RuleCompiler {
                         $node->$method($child);
                         $node = $child;
                     } elseif ($line[$i] == ']') { // 读到 Judge 条件结束的 Token
+                        if ($node->pos != 0) throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 只有在 Judge 条件块中才应该遇到 ']'
                         if ($node instanceof Value) { // 运算符右侧是字符串或正则字面量的情形
                             if ($reading != '') throw new Exception('解析时遇到了无法识别的结构。'); // 此时整个字面量应该已经处理完毕，否则非法
                             $node = $node->parent;
