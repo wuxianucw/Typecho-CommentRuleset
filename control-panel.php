@@ -658,6 +658,8 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                                                 $block.find('.judge-optr').select(block['optr']).trigger('change');
                                                 $block.find('.judge-target .mdui-textfield-input').val(block['target']);
                                                 mdui.updateTextFields($block.find('.judge-target'));
+                                                if (block['then'] == null) block['then'] = 'skip';
+                                                if (block['else'] == null) block['else'] = 'skip';
                                                 if (block['then'].indexOf('#') != -1) {
                                                     $block.find('.judge-then').select('judge');
                                                     $block.find('.judge-then-pos').text(block['then']).parent().removeClass('mdui-hidden');
