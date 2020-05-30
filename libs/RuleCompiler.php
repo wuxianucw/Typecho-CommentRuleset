@@ -68,7 +68,7 @@ class RuleCompiler {
                             if ($reading != '') throw new Exception('解析时遇到了无法识别的结构。'); // 此时整个字面量应该已经处理完毕，否则非法
                             $node = $node->parent;
                         } elseif ($node instanceof Judge) { // 运算符右侧是数字的情形
-                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 运算符右侧什么也没有，非法
+                            if ($reading == '' || $optr) throw new Exception('解析时遇到了意外的 <code>]</code>。'); // Judge 条件不完整
                             $child = new Value();
                             $child->set($reading);
                             if ($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构。'); // 必须是一个数字
@@ -76,11 +76,11 @@ class RuleCompiler {
                         } else throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 其余情况均不应该出现一个 ']'
                         $reading = ''; // 清空读入串以便后续使用
                     } elseif ($line[$i] == ':') { // 读到 Judge then 开始的 Token
-                        if (!$node instanceof Judge || $node->then != null || $reading != '') // 当前节点必须是一个未设置 then 的 Judge，Token 前也不应该有多余的东西
+                        if (!$node instanceof Judge || $node->then != null || $reading != '' || $node->pos == 1) // 当前节点必须是一个未设置 then 的 Judge，Token 前也不应该有多余的东西
                             throw new Exception('解析时遇到了意外的 <code>:</code>。');
                         $node->pos = 1; // 设置标志为处理 then 分支
                     } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token (*) 还可能是运算符开始的 Token
-                        if (!$node instanceof Judge || $node->else != null) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
+                        if (!$node instanceof Judge || $node->else != null || $node->pos == 2) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
                             throw new Exception('解析时遇到了意外的 <code>!</code>。');
                         if ($node->name == '') { // 此时这是一个运算符开始的 Token
                             if ($reading == '') throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');

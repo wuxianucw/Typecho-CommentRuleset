@@ -254,10 +254,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 <h3>基础玩法 <small>快速入门</small></h3>
                 <p>如果您对插件启用、禁用、增删规则等操作比较熟悉，可以跳过这部分内容。（话说能看到此文就说明插件已经成功启用了吧……）</p>
                 <p>首先让我们了解一下插件的目录结构：</p>
-                <pre><code>CommentRuleset
-├───libs
-├───mdui
-└───runtime</code></pre>
+                <pre><code>CommentRuleset<br>├───libs<br>├───mdui<br>└───runtime</code></pre>
                 <p>其中 <code>libs</code> 和 <code>mdui</code> 目录是固有的，运行时不会被修改；<code>runtime</code> 目录是动态生成的，<strong>必须可写且可执行</strong>，将会存放插件的一些必要数据。</p>
                 <p>如果您是直接 clone repo 或从 GitHub 上 Download ZIP 得到的插件文件，则可能还有一个 <code>test</code> 目录，其中存放了笔者开发时用于测试的文件，它不是必需的，并且有时还可能带来隐患，笔者建议删除它。</p>
                 <p><strong>请注意：在插件处于启用状态时，笔者不建议在任何情况下修改或删除插件目录中的文件。</strong></p>
@@ -271,6 +268,50 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 <div class="mdui-divider-inset"></div>
                 <p></p>
                 <p>了解一些基本概念后，我们来尝试新增一条规则。</p>
+                <p>在“新增规则”选项卡，我们可以看到“是否生效”、“规则名称”、“规则备注”、“规则优先级”和“规则内容”五个配置项，下表是对它们的详细说明：</p>
+                <table class="mdui-table">
+                    <thead>
+                        <tr>
+                            <td>配置项</td>
+                            <td>类型</td>
+                            <td>是否必要</td>
+                            <td>说明</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>是否生效</td>
+                            <td><code>bool</code></td>
+                            <td>是</td>
+                            <td>用于控制规则的生效状态。</td>
+                        </tr>
+                        <tr>
+                            <td>规则名称</td>
+                            <td><code>string</code></td>
+                            <td>是</td>
+                            <td>当前规则的名称。规范清晰的命名将有助于日后对规则的维护。</td>
+                        </tr>
+                        <tr>
+                            <td>规则备注</td>
+                            <td><code>string</code></td>
+                            <td>否</td>
+                            <td>为当前规则添加的备注信息，可以是任意内容。</td>
+                        </tr>
+                        <tr>
+                            <td>规则优先级</td>
+                            <td><code>int</code></td>
+                            <td>是</td>
+                            <td>一个大于或等于 0 且小于或等于 99999 的整数。当规则有冲突时，优先级高的规则将会覆盖优先级低的。</td>
+                        </tr>
+                        <tr>
+                            <td>规则内容</td>
+                            <td><code mdui-tooltip="{content: '以 string 形式储存'}">object|string</code></td>
+                            <td>是</td>
+                            <td>当前规则的内容，决定该规则的行为。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>有关“规则内容”的详细配置讲解将在后续“进阶指导”以及“高级技巧”部分展开。</p>
                 <h3>进阶指导 <small>这才是常规操作</small></h3>
                 <p>这部分可以介绍比较复杂的规则……</p>
                 <h3>高级技巧 <small>Let's Speed Up!</small></h3>
@@ -280,7 +321,63 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                 <h4>常见问题 <small>Q&amp;A</small></h4>
                 <p>如标题所述，是一个Q&amp;A内容。</p>
                 <h4>编译错误参考 <small>解析时遇到了雾之湖的妖精</small></h4>
-                <p>如标题所述，是一个编译错误参考。</p>
+                <p>注：下表中 <code>xxx</code> 代表任意字符。</p>
+                <table class="mdui-table">
+                    <thead>
+                        <tr>
+                            <td>错误信息</td>
+                            <td>说明</td>
+                            <td>出错样例</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>解析时遇到了意外的 <code>xxx</code>，期望 <code>EOF</code>。</td>
+                            <td>编译器认为规则应该已经结束，但后续仍然有内容。</td>
+                            <td><pre><code>[ uid == 1 ] : accept ! skip ; <span class="mdui-text-color-red-800">q</span>wq..</code></pre></td>
+                        </tr>
+                        <tr>
+                            <td>解析时遇到了意外的 <code>]</code>。</td>
+                            <td>编译器认为判断块的条件不完整。</td>
+                            <td><pre><code>[ uid == <span class="mdui-text-color-red-800">]</span> : skip ;</code></pre></td>
+                        </tr>
+                        <tr>
+                            <td>解析时遇到了意外的 <code>:</code>。</td>
+                            <td><code>:</code> 用法有误。</td>
+                            <td><pre><code>[ uid == 0 ] : skip <span class="mdui-text-color-red-800">:</span> skip ;</code></pre></td>
+                        </tr>
+                        <tr>
+                            <td>解析时遇到了意外的 <code>!</code>。</td>
+                            <td><code>!</code> 用法有误。</td>
+                            <td><pre><code>[ uid == 0 ] ! skip <span class="mdui-text-color-red-800">!</span> skip ;</code></pre></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td><pre><code></code></pre></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td><pre><code></code></pre></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td><pre><code></code></pre></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td><pre><code></code></pre></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td><pre><code></code></pre></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
         <div id="loading" class="mdui-dialog mdui-dialog-alert" style="text-align: center;">
