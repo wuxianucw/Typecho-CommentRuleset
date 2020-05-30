@@ -82,11 +82,13 @@ class RuleCompiler {
                     } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token (*) 还可能是运算符开始的 Token
                         if (!$node instanceof Judge || $node->else != null || $node->pos == 2) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
                             throw new Exception('解析时遇到了意外的 <code>!</code>。');
-                        if ($node->name == '') { // 此时这是一个运算符开始的 Token
-                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
+                        if ($node->pos == 0 && $node->name == '') { // 此时这是一个运算符开始的 Token
+                            if ($reading == '') throw new Exception('解析时遇到了意外的 <code>!</code>。');
                             $node->name($reading); // 设置 name
                             $reading = $line[$i];
                             $optr = true; // 设置运算符标记为 true
+                        } elseif ($node->pos == 0 && $reading != '') {
+                            throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($reading) . '</code>。');
                         } else {
                             if ($reading != '' && $node->pos == 1) { // 处理这个 signal
                                 $child = new Value();
