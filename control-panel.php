@@ -334,7 +334,7 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                         <tr>
                             <td>解析时遇到了意外的 <code>xxx</code>，期望 <code>EOF</code>。</td>
                             <td>编译器认为规则应该已经结束，但后续仍然有内容。</td>
-                            <td><pre><code>[ uid == 1 ] : accept ! skip ; <span class="mdui-text-color-red-800">q</span>wq..</code></pre></td>
+                            <td><pre><code>[ uid == 1 ] : accept ! skip ; <span class="mdui-text-color-red-800">x</span>xx</code></pre></td>
                         </tr>
                         <tr>
                             <td>解析时遇到了意外的 <code>]</code>。</td>
@@ -352,19 +352,19 @@ $ruleset = CommentRuleset_Plugin::getRuleset();
                             <td><pre><code>[ uid == 0 ] ! skip <span class="mdui-text-color-red-800">!</span> skip ;</code></pre></td>
                         </tr>
                         <tr>
-                            <td></td>
-                            <td></td>
-                            <td><pre><code></code></pre></td>
+                            <td>解析时遇到了无法识别的结构：字面量结束标志后不应有额外的内容。</td>
+                            <td>文本或正则表达式字面量后有额外的非法内容。</td>
+                            <td><pre><code>[ email <- '@'<span class="mdui-text-color-red-800">x</span>xx ] : skip ! deny ;</code></pre></td>
                         </tr>
                         <tr>
-                            <td></td>
-                            <td></td>
-                            <td><pre><code></code></pre></td>
+                            <td>解析时遇到了无法识别的结构：比较对象必须是合法字面量。</td>
+                            <td>运算符右侧内容非法。</td>
+                            <td><pre><code>[ uid == <span class="mdui-text-color-red-800">skip</span> ] : accept ! skip ;</code></pre></td>
                         </tr>
                         <tr>
-                            <td></td>
-                            <td></td>
-                            <td><pre><code></code></pre></td>
+                            <td>解析时遇到了意外的字面量。</td>
+                            <td>此处应为一个 signal 或 Judge，但读取到了数字。</td>
+                            <td><pre><code>[ uid == 1 ] : <span class="mdui-text-color-red-800">1</span> ! skip ;</code></pre></td>
                         </tr>
                         <tr>
                             <td></td>

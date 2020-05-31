@@ -66,13 +66,13 @@ class RuleCompiler {
                     } elseif ($line[$i] == ']') { // 读到 Judge 条件结束的 Token
                         if ($node->pos != 0) throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 只有在 Judge 条件块中才应该遇到 ']'
                         if ($node instanceof Value) { // 运算符右侧是字符串或正则字面量的情形
-                            if ($reading != '') throw new Exception('解析时遇到了无法识别的结构。'); // 此时整个字面量应该已经处理完毕，否则非法
+                            if ($reading != '') throw new Exception('解析时遇到了无法识别的结构：字面量结束标志后不应有额外的内容。'); // 此时整个字面量应该已经处理完毕，否则非法
                             $node = $node->parent;
                         } elseif ($node instanceof Judge) { // 运算符右侧是数字的情形
                             if ($reading == '' || $optr) throw new Exception('解析时遇到了意外的 <code>]</code>。'); // Judge 条件不完整
                             $child = new Value();
                             $child->set($reading);
-                            if ($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构。'); // 必须是一个数字
+                            if ($child->type != 'number') throw new Exception('解析时遇到了无法识别的结构：比较对象必须是合法字面量。'); // 必须是一个数字
                             $node->target($child);
                         } else throw new Exception('解析时遇到了意外的 <code>]</code>。'); // 其余情况均不应该出现一个 ']'
                         $reading = ''; // 清空读入串以便后续使用
@@ -94,7 +94,7 @@ class RuleCompiler {
                             if ($reading != '' && $node->pos == 1) { // 处理这个 signal
                                 $child = new Value();
                                 $child->set($reading);
-                                if ($child->type != 'signal') throw new Exception('解析时遇到了无法识别的结构。'); // 非法
+                                if ($child->type != 'signal') throw new Exception('解析时遇到了意外的字面量。'); // 非法
                                 $node->then($child);
                                 $reading = '';
                             }
