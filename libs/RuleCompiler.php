@@ -476,7 +476,7 @@ class SingleQuotedText extends Value {
     }
 
     /**
-     * 显式转为字符串
+     * 隐式转为字符串 魔术方法
      * 
      * @access public
      * @return string 两侧有引号且转义后的文本内容
@@ -506,7 +506,7 @@ class DoubleQuotedText extends Value {
     }
 
     /**
-     * 显式转为字符串
+     * 隐式转为字符串 魔术方法
      * 
      * @access public
      * @return string 两侧有引号且转义后的文本内容
