@@ -44,7 +44,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                 $this->response->setStatus(204);
                 exit;
             }
-            require_once dirname(__FILE__) . '/libs/RuleCompiler.php';
+            require_once __DIR__ . '/libs/RuleCompiler.php';
             try {
                 echo (new \CommentRuleset\RuleCompiler())->parse($input)->export(new \CommentRuleset\JsonTranslator());
             } catch (\CommentRuleset\Exception $e) {

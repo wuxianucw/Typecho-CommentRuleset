@@ -1,6 +1,6 @@
 <?php
 if (!defined('__TYPECHO_ADMIN__')) exit;
-require_once dirname(__FILE__) . '/libs/MenuOutputer.php';
+require_once __DIR__ . '/libs/MenuOutputer.php';
 Typecho_Widget::widget('CommentRuleset_MenuOutputer')->to($menuOutputer);
 $ruleset = CommentRuleset_Plugin::getRuleset();
 ?>
