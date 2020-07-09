@@ -3,7 +3,6 @@ import { HashRouter as Router, Route, Redirect } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import Typography from '@material-ui/core/Typography';
 import { darken, makeStyles } from '@material-ui/core/styles';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core';
 import { blue, pink } from '@material-ui/core/colors';
@@ -11,6 +10,9 @@ import { blue, pink } from '@material-ui/core/colors';
 import PluginAppBar from './components/PluginAppBar';
 import ResponsiveDrawer from './components/ResponsiveDrawer';
 import MenuList from './components/MenuList';
+import OverviewPage from './components/OverviewPage';
+import EditPage from './components/EditPage';
+import GuidePage from './components/GuidePage';
 
 const theme = createMuiTheme({
     palette: {
@@ -59,7 +61,7 @@ export default function App() {
                         <Route>
                             {({ location, history }) => {
                                 const path = location.pathname.split("/").filter((val) => (val !== ""));
-                                
+
                                 if (path.length < 1 || path.length > 2) return <Redirect to="/overview" />;
                                 if (path.length === 2 && path[0] !== "edit") return <Redirect to="/overview" />;
                                 if (["overview", "edit", "guide"].indexOf(path[0]) === -1) return <Redirect to="/overview" />;
@@ -85,29 +87,9 @@ export default function App() {
                             }}
                         </Route>
                         <main className={classes.content}>
-                            <Typography paragraph>
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-                                ut labore et dolore magna aliqua. Rhoncus dolor purus non enim praesent elementum
-                                facilisis leo vel. Risus at ultrices mi tempus imperdiet. Semper risus in hendrerit
-                                gravida rutrum quisque non tellus. Convallis convallis tellus id interdum velit laoreet id
-                                donec ultrices. Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-                                adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra nibh cras.
-                                Metus vulputate eu scelerisque felis imperdiet proin fermentum leo. Mauris commodo quis
-                                imperdiet massa tincidunt. Cras tincidunt lobortis feugiat vivamus at augue. At augue eget
-                                arcu dictum varius duis at consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem
-                                donec massa sapien faucibus et molestie ac.
-                            </Typography>
-                            <Typography paragraph>
-                                Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper eget nulla
-                                facilisi etiam dignissim diam. Pulvinar elementum integer enim neque volutpat ac
-                                tincidunt. Ornare suspendisse sed nisi lacus sed viverra tellus. Purus sit amet volutpat
-                                consequat mauris. Elementum eu facilisis sed odio morbi. Euismod lacinia at quis risus sed
-                                vulputate odio. Morbi tincidunt ornare massa eget egestas purus viverra accumsan in. In
-                                hendrerit gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem et
-                                tortor. Habitant morbi tristique senectus et. Adipiscing elit duis tristique sollicitudin
-                                nibh sit. Ornare aenean euismod elementum nisi quis eleifend. Commodo viverra maecenas
-                                accumsan lacus vel facilisis. Nulla posuere sollicitudin aliquam ultrices sagittis orci a.
-                            </Typography>
+                            <Route path="/overview" component={OverviewPage} />
+                            <Route path="/edit/:ruid?" component={EditPage} />
+                            <Route path="/guide" component={GuidePage} />
                         </main>
                     </Router>
                 </div>
