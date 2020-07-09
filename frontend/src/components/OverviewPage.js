@@ -42,7 +42,7 @@ function EnhancedTableHead(props) {
     return (
         <TableHead>
             <TableRow>
-                <TableCell padding="checkbox" size="medium">
+                <TableCell padding="checkbox">
                     <Checkbox
                         indeterminate={numSelected > 0 && numSelected < rowCount}
                         checked={rowCount > 0 && numSelected === rowCount}
@@ -54,12 +54,11 @@ function EnhancedTableHead(props) {
                         key={headCell.id}
                         align={headCell.numeric ? 'right' : 'left'}
                         padding={headCell.disablePadding ? 'none' : 'default'}
-                        size="medium"
                     >
                         {headCell.label}
                     </TableCell>
                 ))}
-                <TableCell size="medium">操作</TableCell>
+                <TableCell>操作</TableCell>
             </TableRow>
         </TableHead>
     );
@@ -71,9 +70,9 @@ const useToolbarStyles = makeStyles((theme) => ({
         paddingRight: theme.spacing(1),
     },
     highlight: {
-            color: theme.palette.secondary.main,
-            backgroundColor: lighten(theme.palette.secondary.light, 0.85),
-        },
+        color: theme.palette.secondary.main,
+        backgroundColor: lighten(theme.palette.secondary.light, 0.85),
+    },
     title: {
         flex: '1 1 100%',
     },
@@ -112,7 +111,7 @@ function EnhancedTableToolbar(props) {
     );
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
     root: {
         width: '100%',
     },
@@ -121,17 +120,6 @@ const useStyles = makeStyles((theme) => ({
     },
     table: {
         minWidth: 750,
-    },
-    visuallyHidden: {
-        border: 0,
-        clip: 'rect(0 0 0 0)',
-        height: 1,
-        margin: -1,
-        overflow: 'hidden',
-        padding: 0,
-        position: 'absolute',
-        top: 20,
-        width: 1,
     },
 }));
 
@@ -190,7 +178,6 @@ export default function OverviewPage() {
                 <TableContainer>
                     <Table
                         className={classes.table}
-                        size="small"
                     >
                         <EnhancedTableHead
                             classes={classes}
@@ -226,8 +213,8 @@ export default function OverviewPage() {
                                             <TableCell>{row.status}</TableCell>
                                             <TableCell align="right">{row.priority}</TableCell>
                                             <TableCell>
-                                                <IconButton><EditIcon /></IconButton>
-                                                <IconButton><LockOutlinedIcon /></IconButton>
+                                                <IconButton size="small"><EditIcon /></IconButton>
+                                                <IconButton size="small"><LockOutlinedIcon /></IconButton>
                                             </TableCell>
                                         </TableRow>
                                     );
