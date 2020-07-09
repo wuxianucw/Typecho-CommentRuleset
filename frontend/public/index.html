@@ -13,11 +13,42 @@
             Learn how to configure a non-root public URL by running `npm run build`.
         -->
         <title>Loading...</title>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+        <link rel="stylesheet" href="roboto-font.css" />
         <script>
             window.__pageData = {
                 title: '评论规则集管理', // $menu->title()
-                profile: ['#', '账户'], // [$options->adminUrl('profile.php'), '最后登录' | '账户']
+                account: ['账户', '#', '#'], // ['最后登录' | '账户', $options->adminUrl('profile.php'), $options->logoutUrl()]
+                menu: [
+                    {
+                        title: '控制台',
+                        open: true,
+                        children: [
+                            ['概要', '#'],
+                            ['个人设置', '#'],
+                            ['插件', '#'],
+                            ['外观', '#'],
+                            ['备份', '#'],
+                            ['评论规则集', true],
+                        ],
+                    },
+                    {
+                        title: '撰写',
+                        children: [
+                            ['撰写文章', '#'],
+                            ['创建页面', '#'],
+                        ],
+                    },
+                    {
+                        title: '管理',
+                        children: [
+                            ['undefined', '#']
+                        ],
+                    },
+                    {
+                        title: '设置',
+                        children: [],
+                    },
+                ],
             };
         </script>
     </head>

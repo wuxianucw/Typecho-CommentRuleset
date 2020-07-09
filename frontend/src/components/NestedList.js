@@ -1,5 +1,4 @@
 import React from 'react';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -8,14 +7,7 @@ import Collapse from '@material-ui/core/Collapse';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 
-const useStyles = makeStyles((theme) => ({
-    nested: {
-        paddingLeft: theme.spacing(4),
-    },
-}));
-
 export default function NestedList(props) {
-    const classes = useStyles();
     const { icon, primary, children } = props;
     const [open, setOpen] = React.useState(props.open);
 
@@ -32,9 +24,7 @@ export default function NestedList(props) {
             </ListItem>
             <Collapse in={open} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
-                    <div className={classes.nested}>
-                        {children}
-                    </div>
+                    {children}
                 </List>
             </Collapse>
         </div>

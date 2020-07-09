@@ -27,7 +27,7 @@ export default function ResponsiveDrawer(props) {
                     variant="temporary"
                     anchor="left"
                     open={props.open}
-                    onClose={props.onClose}
+                    onClose={props.onMobileClose}
                     classes={{
                         paper: classes.drawerPaper,
                     }}
