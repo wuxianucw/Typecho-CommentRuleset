@@ -18,6 +18,9 @@ import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import HighlightOffIcon from '@material-ui/icons/HighlightOff';
+import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
 
 function createData(name, ruid, remark, status, priority) {
     return { name, ruid, remark, status, priority };
@@ -58,7 +61,7 @@ function EnhancedTableHead(props) {
                         {headCell.label}
                     </TableCell>
                 ))}
-                <TableCell>操作</TableCell>
+                <TableCell align="right">操作</TableCell>
             </TableRow>
         </TableHead>
     );
@@ -80,7 +83,7 @@ const useToolbarStyles = makeStyles((theme) => ({
 
 function EnhancedTableToolbar(props) {
     const classes = useToolbarStyles();
-    const { numSelected, rowCount } = props;
+    const { numSelected, rowCount, onAddClick, onDeleteClick } = props;
 
     return (
         <Toolbar
@@ -100,18 +103,18 @@ function EnhancedTableToolbar(props) {
 
             {numSelected > 0 ? (
                 <Tooltip title="删除规则">
-                    <IconButton><DeleteIcon /></IconButton>
+                    <IconButton onClick={onDeleteClick}><DeleteIcon /></IconButton>
                 </Tooltip>
             ) : (
                 <Tooltip title="新增规则">
-                    <IconButton><AddIcon /></IconButton>
+                    <IconButton onClick={onAddClick}><AddIcon /></IconButton>
                 </Tooltip>
             )}
         </Toolbar>
     );
 }
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
     root: {
         width: '100%',
     },
@@ -121,29 +124,39 @@ const useStyles = makeStyles(() => ({
     table: {
         minWidth: 750,
     },
+    iconCell: {
+        padding: '0 16px',
+    },
+    statusIcon: {
+        marginRight: theme.spacing(1),
+        '& svg': {
+            verticalAlign: 'bottom',
+        },
+    },
 }));
 
-export default function OverviewPage() {
+export default function OverviewPage(props) {
     const classes = useStyles();
+    const { history } = props;
     const [selected, setSelected] = React.useState([]);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
-            const newSelecteds = rows.map((n) => n.name);
+            const newSelecteds = rows.map((n) => n.ruid);
             setSelected(newSelecteds);
             return;
         }
         setSelected([]);
     };
 
-    const handleClick = (_, name) => {
-        const selectedIndex = selected.indexOf(name);
+    const handleClick = (_, ruid) => {
+        const selectedIndex = selected.indexOf(ruid);
         let newSelected = [];
 
         if (selectedIndex === -1) {
-            newSelected = newSelected.concat(selected, name);
+            newSelected = newSelected.concat(selected, ruid);
         } else if (selectedIndex === 0) {
             newSelected = newSelected.concat(selected.slice(1));
         } else if (selectedIndex === selected.length - 1) {
@@ -167,14 +180,47 @@ export default function OverviewPage() {
         setPage(0);
     };
 
-    const isSelected = (name) => selected.indexOf(name) !== -1;
+    const isSelected = (ruid) => selected.indexOf(ruid) !== -1;
 
     const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
+
+    const statusMap = {
+        on: {
+            text: "生效",
+            icon: <CheckCircleOutlineIcon />,
+        },
+        off: {
+            text: "未生效",
+            icon: <HighlightOffIcon />,
+        },
+        locked: {
+            text: "锁定",
+            icon: <LockOutlinedIcon />,
+        },
+        uncompiled: {
+            text: "未编译",
+            icon: <ReportProblemOutlinedIcon />,
+        },
+    };
+
+    const handleAddClick = () => {
+        history.push("/edit");
+    };
+
+    const handleDeleteClick = () => {
+        console.log(selected);
+        alert("Not allowed.");
+    };
 
     return (
         <div className={classes.root}>
             <Paper className={classes.paper}>
-                <EnhancedTableToolbar numSelected={selected.length} rowCount={rows.length} />
+                <EnhancedTableToolbar
+                    numSelected={selected.length}
+                    rowCount={rows.length}
+                    onAddClick={handleAddClick}
+                    onDeleteClick={handleDeleteClick}
+                />
                 <TableContainer>
                     <Table
                         className={classes.table}
@@ -188,7 +234,7 @@ export default function OverviewPage() {
                         <TableBody>
                             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
-                                    const isItemSelected = isSelected(row.name);
+                                    const isItemSelected = isSelected(row.ruid);
                                     const labelId = `enhanced-table-checkbox-${index}`;
 
                                     return (
@@ -196,12 +242,12 @@ export default function OverviewPage() {
                                             hover
                                             role="checkbox"
                                             tabIndex={-1}
-                                            key={row.name}
+                                            key={row.ruid}
                                             selected={isItemSelected}
                                         >
                                             <TableCell padding="checkbox">
                                                 <Checkbox
-                                                    onClick={(event) => handleClick(event, row.name)}
+                                                    onClick={(event) => handleClick(event, row.ruid)}
                                                     checked={isItemSelected}
                                                 />
                                             </TableCell>
@@ -210,11 +256,21 @@ export default function OverviewPage() {
                                             </TableCell>
                                             <TableCell><code>{row.ruid}</code></TableCell>
                                             <TableCell>{row.remark}</TableCell>
-                                            <TableCell>{row.status}</TableCell>
+                                            <TableCell className={classes.iconCell}>
+                                                {row.status.map((status) => (
+                                                    <Tooltip key={status} title={statusMap[status].text}>
+                                                        <span className={classes.statusIcon}>{statusMap[status].icon}</span>
+                                                    </Tooltip>
+                                                ))}
+                                            </TableCell>
                                             <TableCell align="right">{row.priority}</TableCell>
-                                            <TableCell>
-                                                <IconButton size="small"><EditIcon /></IconButton>
-                                                <IconButton size="small"><LockOutlinedIcon /></IconButton>
+                                            <TableCell align="right" className={classes.iconCell}>
+                                                <Tooltip title="编辑">
+                                                    <IconButton><EditIcon /></IconButton>
+                                                </Tooltip>
+                                                <Tooltip title="锁定">
+                                                    <IconButton><LockOutlinedIcon /></IconButton>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     );
