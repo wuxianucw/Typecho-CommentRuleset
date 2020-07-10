@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { lighten, makeStyles } from '@material-ui/core/styles';
+import { lighten, makeStyles, useTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -18,6 +18,7 @@ import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import LockOpenIcon from '@material-ui/icons/LockOpen';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
@@ -33,10 +34,10 @@ const rows = [
 
 const headCells = [
     { id: 'name', numeric: false, disablePadding: true, label: '规则名称' },
-    { id: 'ruid', numeric: false, disablePadding: false, label: 'RUID' },
+    { id: 'ruid', numeric: false, disablePadding: false, label: 'RUID', tooltip: '规则唯一标识符' },
     { id: 'remark', numeric: false, disablePadding: false, label: '规则备注' },
     { id: 'status', numeric: false, disablePadding: false, label: '规则状态' },
-    { id: 'priority', numeric: true, disablePadding: false, label: '规则优先级' },
+    { id: 'priority', numeric: true, disablePadding: false, label: '规则优先级', tooltip: '数值越大的规则优先级越高' },
 ];
 
 function EnhancedTableHead(props) {
@@ -52,7 +53,16 @@ function EnhancedTableHead(props) {
                         onChange={onSelectAllClick}
                     />
                 </TableCell>
-                {headCells.map((headCell) => (
+                {headCells.map((headCell) => (headCell.tooltip ? (
+                    <Tooltip key={headCell.id} title={headCell.tooltip}>
+                        <TableCell
+                            align={headCell.numeric ? 'right' : 'left'}
+                            padding={headCell.disablePadding ? 'none' : 'default'}
+                        >
+                            {headCell.label}
+                        </TableCell>
+                    </Tooltip>
+                ) : (
                     <TableCell
                         key={headCell.id}
                         align={headCell.numeric ? 'right' : 'left'}
@@ -60,7 +70,7 @@ function EnhancedTableHead(props) {
                     >
                         {headCell.label}
                     </TableCell>
-                ))}
+                )))}
                 <TableCell align="right">操作</TableCell>
             </TableRow>
         </TableHead>
@@ -83,7 +93,7 @@ const useToolbarStyles = makeStyles((theme) => ({
 
 function EnhancedTableToolbar(props) {
     const classes = useToolbarStyles();
-    const { numSelected, rowCount, onAddClick, onDeleteClick } = props;
+    const { numSelected, rowCount, disableDelete, onAddClick, onDeleteClick } = props;
 
     return (
         <Toolbar
@@ -102,8 +112,11 @@ function EnhancedTableToolbar(props) {
             )}
 
             {numSelected > 0 ? (
-                <Tooltip title="删除规则">
-                    <IconButton onClick={onDeleteClick}><DeleteIcon /></IconButton>
+                <Tooltip title={disableDelete ? "选中的规则中包含锁定的规则" : "删除规则"}>
+                    <span><IconButton
+                        disabled={disableDelete}
+                        onClick={onDeleteClick}
+                    ><DeleteIcon /></IconButton></span>
                 </Tooltip>
             ) : (
                 <Tooltip title="新增规则">
@@ -136,23 +149,38 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function OverviewPage(props) {
+    const theme = useTheme();
     const classes = useStyles();
     const { history } = props;
     const [selected, setSelected] = React.useState([]);
+    const [selectedLockedCount, setSelectedLockedCount] = React.useState(0);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
+    const isLocked = (ruid) => {
+        const search = rows.filter((row) => row.ruid === ruid);
+        if (search.length < 1) return false;
+        return search[0].status.indexOf("locked") !== -1;
+    };
+
     const handleSelectAllClick = (event) => {
         if (event.target.checked) {
-            const newSelecteds = rows.map((n) => n.ruid);
+            let newLockedCount = 0;
+            const newSelecteds = rows.map((n) => {
+                if (n.status.indexOf("locked") !== -1) newLockedCount++;
+                return n.ruid;
+            });
+            setSelectedLockedCount(newLockedCount);
             setSelected(newSelecteds);
             return;
         }
+        setSelectedLockedCount(0);
         setSelected([]);
     };
 
     const handleClick = (_, ruid) => {
         const selectedIndex = selected.indexOf(ruid);
+        const isItemLocked = isLocked(ruid);
         let newSelected = [];
 
         if (selectedIndex === -1) {
@@ -167,6 +195,8 @@ export default function OverviewPage(props) {
                 selected.slice(selectedIndex + 1),
             );
         }
+
+        if (isItemLocked) setSelectedLockedCount(selectedLockedCount + (selectedIndex === -1 ? 1 : -1));
 
         setSelected(newSelected);
     };
@@ -187,25 +217,29 @@ export default function OverviewPage(props) {
     const statusMap = {
         on: {
             text: "生效",
-            icon: <CheckCircleOutlineIcon />,
+            icon: <CheckCircleOutlineIcon htmlColor={theme.palette.success.dark} />,
         },
         off: {
             text: "未生效",
-            icon: <HighlightOffIcon />,
+            icon: <HighlightOffIcon color="action" />,
         },
         locked: {
             text: "锁定",
-            icon: <LockOutlinedIcon />,
+            icon: <LockOutlinedIcon color="action" />,
         },
         uncompiled: {
             text: "未编译",
-            icon: <ReportProblemOutlinedIcon />,
+            icon: <ReportProblemOutlinedIcon htmlColor={theme.palette.warning.dark} />,
         },
     };
 
     const handleAddClick = () => {
         history.push("/edit");
     };
+
+    const handleEditClick = (ruid) => {
+        history.push("/edit/" + ruid);
+    }
 
     const handleDeleteClick = () => {
         console.log(selected);
@@ -218,6 +252,7 @@ export default function OverviewPage(props) {
                 <EnhancedTableToolbar
                     numSelected={selected.length}
                     rowCount={rows.length}
+                    disableDelete={selectedLockedCount > 0}
                     onAddClick={handleAddClick}
                     onDeleteClick={handleDeleteClick}
                 />
@@ -236,6 +271,7 @@ export default function OverviewPage(props) {
                                 .map((row, index) => {
                                     const isItemSelected = isSelected(row.ruid);
                                     const labelId = `enhanced-table-checkbox-${index}`;
+                                    const isItemLocked = row.status.indexOf("locked") !== -1;
 
                                     return (
                                         <TableRow
@@ -265,11 +301,16 @@ export default function OverviewPage(props) {
                                             </TableCell>
                                             <TableCell align="right">{row.priority}</TableCell>
                                             <TableCell align="right" className={classes.iconCell}>
-                                                <Tooltip title="编辑">
-                                                    <IconButton><EditIcon /></IconButton>
+                                                <Tooltip title={isItemLocked ? "锁定状态下禁止编辑" : "编辑"}>
+                                                    <span><IconButton
+                                                        disabled={isItemLocked}
+                                                        onClick={() => handleEditClick(row.ruid)}
+                                                    ><EditIcon /></IconButton></span>
                                                 </Tooltip>
-                                                <Tooltip title="锁定">
-                                                    <IconButton><LockOutlinedIcon /></IconButton>
+                                                <Tooltip title={isItemLocked ? "解锁" : "锁定"}>
+                                                    <IconButton>
+                                                        {isItemLocked ? <LockOpenIcon /> : <LockOutlinedIcon />}
+                                                    </IconButton>
                                                 </Tooltip>
                                             </TableCell>
                                         </TableRow>
