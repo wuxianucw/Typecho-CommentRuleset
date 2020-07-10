@@ -40,10 +40,11 @@ const useStyles = makeStyles((theme) => ({
 
 export default function App() {
     const classes = useStyles();
-    const [mobileOpen, setMobileOpen] = React.useState(false);
+    const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+    const [rules, setRules] = React.useState(window.__pageData.rules);
 
     const handleDrawerToggle = () => {
-        setMobileOpen(!mobileOpen);
+        setMobileDrawerOpen(!mobileDrawerOpen);
     };
 
     return (
@@ -51,7 +52,7 @@ export default function App() {
             <div className={classes.root}>
                 <CssBaseline />
                 <PluginAppBar onMenuButtonClick={handleDrawerToggle} />
-                <ResponsiveDrawer open={mobileOpen} onMobileClose={handleDrawerToggle}>
+                <ResponsiveDrawer open={mobileDrawerOpen} onMobileClose={handleDrawerToggle}>
                     <div className={classes.toolbar} />
                     <MenuList />
                 </ResponsiveDrawer>
@@ -88,7 +89,7 @@ export default function App() {
                             }}
                         </Route>
                         <main className={classes.content}>
-                            <Route path="/overview" component={OverviewPage} />
+                            <Route path="/overview" component={(props) => <OverviewPage rows={rules} {...props} />} />
                             <Route path="/edit/:ruid?" component={EditPage} />
                             <Route path="/guide" component={GuidePage} />
                         </main>

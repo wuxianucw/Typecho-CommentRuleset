@@ -148,8 +148,7 @@ const useStyles = makeStyles((theme) => ({
 export default function OverviewPage(props) {
     const theme = useTheme();
     const classes = useStyles();
-    const { history } = props;
-    const [rows, setRows] = React.useState(window.__pageData.rules);
+    const { history, rows } = props;
     const [selected, setSelected] = React.useState([]);
     const [selectedLockedCount, setSelectedLockedCount] = React.useState(0);
     const [page, setPage] = React.useState(0);
