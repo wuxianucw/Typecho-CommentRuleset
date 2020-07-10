@@ -67,6 +67,7 @@ export default function App() {
                                 if (["overview", "edit", "guide"].indexOf(path[0]) === -1) return <Redirect to="/overview" />;
 
                                 const handleChange = (_, newValue) => {
+                                    if (newValue === path[0]) return;
                                     history.push("/" + newValue);
                                 };
 
