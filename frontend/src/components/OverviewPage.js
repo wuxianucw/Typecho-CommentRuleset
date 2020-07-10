@@ -318,9 +318,9 @@ export default function OverviewPage(props) {
                                                     ><EditIcon /></IconButton></span>
                                                 </Tooltip>
                                                 <Tooltip title={isItemLocked ? "解锁" : "锁定"}>
-                                                    <IconButton>
+                                                    <span><IconButton>
                                                         {isItemLocked ? <LockOpenIcon /> : <LockOutlinedIcon />}
-                                                    </IconButton>
+                                                    </IconButton></span>
                                                 </Tooltip>
                                             </TableCell>
                                         </TableRow>
