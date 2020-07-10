@@ -22,6 +22,12 @@ import LockOpenIcon from '@material-ui/icons/LockOpen';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
 function createData(name, ruid, remark, status, priority) {
     return { name, ruid, remark, status, priority };
@@ -137,7 +143,7 @@ const useStyles = makeStyles((theme) => ({
     table: {
         minWidth: 750,
     },
-    iconCell: {
+    disableVerticalPadding: {
         padding: '0 16px',
     },
     statusIcon: {
@@ -156,6 +162,8 @@ export default function OverviewPage(props) {
     const [selectedLockedCount, setSelectedLockedCount] = React.useState(0);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [remarkDialogOpen, setRemarkDialogOpen] = React.useState(false);
+    const [remarkDialogContent, setRemarkDialogContent] = React.useState("");
 
     const isLocked = (ruid) => {
         const search = rows.filter((row) => row.ruid === ruid);
@@ -208,6 +216,16 @@ export default function OverviewPage(props) {
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
+    };
+
+    const handleRemarkDialogClose = () => {
+        setRemarkDialogOpen(false);
+    };
+
+    const handleShowRemarkClick = (remark) => {
+        const showRemark = remark === "" ? "（无备注）" : remark;
+        setRemarkDialogContent(showRemark);
+        setRemarkDialogOpen(true);
     };
 
     const isSelected = (ruid) => selected.indexOf(ruid) !== -1;
@@ -270,7 +288,6 @@ export default function OverviewPage(props) {
                             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
                                     const isItemSelected = isSelected(row.ruid);
-                                    const labelId = `enhanced-table-checkbox-${index}`;
                                     const isItemLocked = row.status.indexOf("locked") !== -1;
 
                                     return (
@@ -287,12 +304,14 @@ export default function OverviewPage(props) {
                                                     checked={isItemSelected}
                                                 />
                                             </TableCell>
-                                            <TableCell component="th" id={labelId} scope="row" padding="none">
+                                            <TableCell component="th" scope="row" padding="none">
                                                 {row.name}
                                             </TableCell>
                                             <TableCell><code>{row.ruid}</code></TableCell>
-                                            <TableCell>{row.remark}</TableCell>
-                                            <TableCell className={classes.iconCell}>
+                                            <TableCell className={classes.disableVerticalPadding}>
+                                                <Button onClick={() => handleShowRemarkClick(row.remark)}>点击查看</Button>
+                                            </TableCell>
+                                            <TableCell className={classes.disableVerticalPadding}>
                                                 {row.status.map((status) => (
                                                     <Tooltip key={status} title={statusMap[status].text}>
                                                         <span className={classes.statusIcon}>{statusMap[status].icon}</span>
@@ -300,7 +319,7 @@ export default function OverviewPage(props) {
                                                 ))}
                                             </TableCell>
                                             <TableCell align="right">{row.priority}</TableCell>
-                                            <TableCell align="right" className={classes.iconCell}>
+                                            <TableCell align="right" className={classes.disableVerticalPadding}>
                                                 <Tooltip title={isItemLocked ? "锁定状态下禁止编辑" : "编辑"}>
                                                     <span><IconButton
                                                         disabled={isItemLocked}
@@ -338,6 +357,21 @@ export default function OverviewPage(props) {
                     onChangeRowsPerPage={handleChangeRowsPerPage}
                 />
             </Paper>
+            <Dialog
+                open={remarkDialogOpen}
+                fullWidth
+                onClose={handleRemarkDialogClose}
+            >
+                <DialogTitle>查看规则备注</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {remarkDialogContent}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleRemarkDialogClose} color="primary" autoFocus>关闭</Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
