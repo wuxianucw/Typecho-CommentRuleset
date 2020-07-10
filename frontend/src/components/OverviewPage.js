@@ -29,15 +29,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 
-function createData(name, ruid, remark, status, priority) {
-    return { name, ruid, remark, status, priority };
-}
-
-const rows = [
-    createData('演示规则1', '000000', '这是一条演示规则', ['on', 'locked'], 10),
-    createData('演示规则2', 'ffffff', '这是另一条演示规则', ['off', 'uncompiled'], 10),
-];
-
 const headCells = [
     { id: 'name', numeric: false, disablePadding: true, label: '规则名称' },
     { id: 'ruid', numeric: false, disablePadding: false, label: 'RUID', tooltip: '规则唯一标识符' },
@@ -158,6 +149,7 @@ export default function OverviewPage(props) {
     const theme = useTheme();
     const classes = useStyles();
     const { history } = props;
+    const [rows, setRows] = React.useState(window.__pageData.rules);
     const [selected, setSelected] = React.useState([]);
     const [selectedLockedCount, setSelectedLockedCount] = React.useState(0);
     const [page, setPage] = React.useState(0);
@@ -286,7 +278,7 @@ export default function OverviewPage(props) {
                         />
                         <TableBody>
                             {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
+                                .map((row) => {
                                     const isItemSelected = isSelected(row.ruid);
                                     const isItemLocked = row.status.indexOf("locked") !== -1;
 
