@@ -6,16 +6,9 @@ import DashboardIcon from '@material-ui/icons/Dashboard';
 import BorderColorIcon from '@material-ui/icons/BorderColor';
 import WidgetsIcon from '@material-ui/icons/Widgets';
 import SettingsIcon from '@material-ui/icons/Settings';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 
 import NestedList from './NestedList';
 import ListItemLink from './ListItemLink';
-
-const useStyles = makeStyles((theme) => ({
-    nested: {
-        paddingLeft: theme.spacing(9),
-    },
-}));
 
 const icons = [
     <DashboardIcon />,
@@ -25,7 +18,6 @@ const icons = [
 ];
 
 export default function MenuList() {
-    const classes = useStyles();
     return (
         <List>
             {window.__pageData.menu.map((val, i) => (
@@ -37,11 +29,11 @@ export default function MenuList() {
                 >
                     {val.children.map((val, i) => (
                         val[1] === true ?
-                            <ListItem key={i} button selected className={classes.nested}>
+                            <ListItem key={i} button selected>
                                 <ListItemText primary={val[0]} />
                             </ListItem>
                         :
-                            <ListItemLink key={i} primary={val[0]} to={val[1]} className={classes.nested} />
+                            <ListItemLink key={i} primary={val[0]} to={val[1]} />
                     ))}
                 </NestedList>
             ))}

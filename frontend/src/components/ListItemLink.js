@@ -16,11 +16,9 @@ export default function ListItemLink(props) {
     );
 
     return (
-        <li>
-            <ListItem button component={ItemLink} {...other}>
-                {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
-                <ListItemText primary={primary} />
-            </ListItem>
-        </li>
+        <ListItem button component={ItemLink} {...other}>
+            {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
+            <ListItemText primary={primary} />
+        </ListItem>
     );
 }
