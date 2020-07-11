@@ -116,7 +116,7 @@ export default function EditPage(props) {
                 multiline
                 fullWidth
                 label="规则备注"
-                helperText={remark === "怎么多行" ? "按回车" : "可以为空，允许多行"}
+                helperText="可以为空，允许多行"
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
             />
