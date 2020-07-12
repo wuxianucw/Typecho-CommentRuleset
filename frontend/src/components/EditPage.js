@@ -17,6 +17,12 @@ const useStyles = makeStyles((theme) => ({
         alignItems: 'center',
         paddingTop: theme.spacing(8),
     },
+    nameInput: {
+        width: "calc(75% - " + theme.spacing(2) + "px)",
+        [theme.breakpoints.up('md')]: {
+            width: "50%",
+        },
+    },
 }));
 
 export default function EditPage(props) {
@@ -96,7 +102,7 @@ export default function EditPage(props) {
                     label="规则名称"
                     variant="outlined"
                     margin="normal"
-                    style={{ width: "50%" }}
+                    className={classes.nameInput}
                 />
                 <TextField
                     value={priority}
