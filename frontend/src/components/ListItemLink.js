@@ -9,7 +9,7 @@ export default function ListItemLink(props) {
     const ItemLink = React.useMemo(
         () =>
             React.forwardRef((linkProps, ref) => (
-                // eslint-disable-next-line
+                // eslint-disable-next-line jsx-a11y/anchor-has-content
                 <a ref={ref} href={to} {...linkProps} />
             )),
         [to],

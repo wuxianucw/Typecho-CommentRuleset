@@ -32,22 +32,30 @@ export default function EditPage(props) {
     const [nameError, setNameError] = React.useState(false);
     const [priorityError, setPriorityError] = React.useState(false);
 
-    if (!initialState) {
-        axios.get(window.__pageData.apiBase, {
-            params: {
-                a: "ruleDetails",
-                ruid: ruid,
-            },
-        }).then(({ data }) => {
-            setInitialState(true);
-            setName(data.name);
-            setRemark(data.remark);
-            setStatus(data.status);
-            setPriority(data.priority);
-        }).catch(() => {
-            history.push("/overview");
-        });
-    }
+    React.useEffect(() => {
+        const source = axios.CancelToken.source();
+        if (!initialState) {
+            axios.get(window.__pageData.apiBase, {
+                params: {
+                    a: "ruleDetails",
+                    ruid: ruid,
+                },
+                cancelToken: source.token,
+            }).then(({ data }) => {
+                setInitialState(true);
+                setName(data.name);
+                setRemark(data.remark);
+                setStatus(data.status);
+                setPriority(data.priority);
+            }).catch((error) => {
+                if (!axios.isCancel(error)) history.push("/overview");
+            });
+        }
+        return () => {
+            if (!initialState) source.cancel();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleNameChange = (event) => {
         setName(event.target.value);
@@ -79,6 +87,9 @@ export default function EditPage(props) {
                 <TextField
                     value={name}
                     onChange={handleNameChange}
+                    inputProps={{
+                        onBlur: (event) => setNameError(event.target.value === ""),
+                    }}
                     required
                     error={nameError}
                     helperText={nameError ? "规则名称不能为空" : ""}

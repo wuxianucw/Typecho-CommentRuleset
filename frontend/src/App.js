@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense, Fragment } from 'react';
 import { HashRouter as Router, Route, Redirect } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Tabs from '@material-ui/core/Tabs';
@@ -10,9 +10,10 @@ import { blue, pink } from '@material-ui/core/colors';
 import PluginAppBar from './components/PluginAppBar';
 import ResponsiveDrawer from './components/ResponsiveDrawer';
 import MenuList from './components/MenuList';
-import OverviewPage from './components/OverviewPage';
-import EditPage from './components/EditPage';
-import GuidePage from './components/GuidePage';
+
+const OverviewPage = lazy(() => import('./components/OverviewPage'));
+const EditPage = lazy(() => import('./components/EditPage'));
+const GuidePage = lazy(() => import('./components/GuidePage'));
 
 const theme = createMuiTheme({
     palette: {
@@ -48,17 +49,17 @@ export default function App() {
     };
 
     return (
-        <MuiThemeProvider theme={theme}>
-            <div className={classes.root}>
-                <CssBaseline />
-                <PluginAppBar onMenuButtonClick={handleDrawerToggle} />
-                <ResponsiveDrawer open={mobileDrawerOpen} onMobileClose={handleDrawerToggle}>
-                    <div className={classes.toolbar} />
-                    <MenuList />
-                </ResponsiveDrawer>
-                <div style={{ flexGrow: 1 }}>
-                    <div className={classes.toolbar} />
-                    <Router>
+        <Router>
+            <MuiThemeProvider theme={theme}>
+                <div className={classes.root}>
+                    <CssBaseline />
+                    <PluginAppBar onMenuButtonClick={handleDrawerToggle} />
+                    <ResponsiveDrawer open={mobileDrawerOpen} onMobileClose={handleDrawerToggle}>
+                        <div className={classes.toolbar} />
+                        <MenuList />
+                    </ResponsiveDrawer>
+                    <div style={{ flexGrow: 1 }}>
+                        <div className={classes.toolbar} />
                         <Route>
                             {({ location, history }) => {
                                 const path = location.pathname.split("/").filter((val) => (val !== ""));
@@ -89,13 +90,15 @@ export default function App() {
                             }}
                         </Route>
                         <main className={classes.content}>
-                            <Route path="/overview" component={(props) => <OverviewPage rows={rules} {...props} />} />
-                            <Route path="/edit/:ruid?" component={EditPage} />
-                            <Route path="/guide" component={GuidePage} />
+                            <Suspense fallback={<Fragment />}>
+                                <Route path="/overview" component={(props) => <OverviewPage rows={rules} {...props} />} />
+                                <Route path="/edit/:ruid?" component={EditPage} />
+                                <Route path="/guide" component={GuidePage} />
+                            </Suspense>
                         </main>
-                    </Router>
+                    </div>
                 </div>
-            </div>
-        </MuiThemeProvider>
+            </MuiThemeProvider>
+        </Router>
     );
 }
