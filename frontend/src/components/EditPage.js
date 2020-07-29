@@ -10,6 +10,8 @@ import Checkbox from '@material-ui/core/Checkbox';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import useTheme from '@material-ui/core/styles/useTheme';
 
+import RuleEditor from './RuleEditor';
+
 const useStyles = makeStyles((theme) => ({
     placeholder: {
         display: 'flex',
@@ -137,6 +139,7 @@ export default function EditPage(props) {
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
             />
+            <RuleEditor />
         </Container>
     ) : (
         <div className={classes.placeholder}>
