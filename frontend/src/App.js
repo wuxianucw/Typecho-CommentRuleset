@@ -58,7 +58,7 @@ export default function App() {
                         <div className={classes.toolbar} />
                         <MenuList />
                     </ResponsiveDrawer>
-                    <div style={{ flexGrow: 1 }}>
+                    <div style={{ flexGrow: 1, width: '100%' }}>
                         <div className={classes.toolbar} />
                         <Route>
                             {({ location, history }) => {
