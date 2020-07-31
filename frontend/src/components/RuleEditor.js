@@ -2,7 +2,9 @@ import React from 'react';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import MonacoEditor from 'react-monaco-editor';
+import { ControlledEditor as MonacoEditor } from '@rimoe/react-monaco-editor';
+
+import { options as monacoOptions, languageDef, configuration as langConf } from './editor-config';
 
 const useStyles = makeStyles((theme) => ({
 
@@ -20,6 +22,18 @@ export default function RuleEditor(props) {
         setEditMode((mode) => [1, 0][mode]);
     };
 
+    const handleEditorChange = (_, newText) => {
+        setRuleText(newText);
+    };
+
+    const editorWillMount = (editor) => {
+        if (!editor.languages.getLanguages().some(({ id }) => (id === "rule"))) {
+            editor.languages.register({ id: "rule" });
+            editor.languages.setMonarchTokensProvider("rule", languageDef);
+            editor.languages.setLanguageConfiguration("rule", langConf);
+        }
+    };
+
     return (
         <>
             <InputLabel required shrink>规则内容</InputLabel>
@@ -34,8 +48,13 @@ export default function RuleEditor(props) {
                 <div />
             ) : (
                 <MonacoEditor
-                    height="600"
+                    height="600px"
+                    language="rule"
                     theme="vs-dark"
+                    value={ruleText}
+                    onChange={handleEditorChange}
+                    editorWillMount={editorWillMount}
+                    options={monacoOptions}
                 />
             )}
         </>
