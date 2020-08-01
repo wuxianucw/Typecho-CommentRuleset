@@ -6,41 +6,45 @@ export const options = {
 
 export const languageDef = {
     keywords: [
-        'accept', 'review', 'spam', 'deny', 'skip'
+        'accept', 'review', 'spam', 'deny', 'skip',
+    ],
+
+    names: [
+        'uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua',
     ],
 
     operators: [
-        '==', '!=', '<', '>', '<=', '>=', '<-', '~'
+        '==', '!=', '<', '>', '<=', '>=', '<-', '~',
     ],
 
-    // we include these common regular expressions
-    symbols: /[=><!~?:&|+\-*\/\^%]+/,
+    symbols: /[=><!~-]+/,
 
-    // C# style strings
-    escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+    regexpctl: /[(){}[\]$^|\-*+?.]/,
+	regexpesc: /\\(?:[bBdDfnrstvwWn0\\/]|@regexpctl|c[A-Z]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/,
 
-    regexpctl: /[(){}\[\]\$\^|\-*+?\.]/,
-	regexpesc: /\\(?:[bBdDfnrstvwWn0\\\/]|@regexpctl|c[A-Z]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/,
-
-    // The main tokenizer for our languages
+    // The main tokenizer for rule
     tokenizer: {
         root: [
             // identifiers and keywords
             [/[a-z_$][\w$]*/, {
                 cases: {
                     '@keywords': 'keyword',
-                    '@default': 'identifier'
+                    '@names': 'type.identifier',
+                    '@default': 'identifier',
                 }
             }],
-            [/[A-Z][\w\$]*/, 'type.identifier'],  // to show class names nicely
 
-            // whitespace
+            [/[[\]:!;]/, 'delimiter'],
+
+            // whitespace and comments
             { include: '@whitespace' },
 
-            [/\/(?=([^\\\/]|\\.)+\/([gimsuy]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
+            // regular expression: magic
+            // [/\/(?=([^\\/]|\\.)+\/([imsxADSUXJu]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
+            [/\/(?=([^\\\/]|\\.)*)/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
 
             // delimiters and operators
-            [/[{}()\[\]]/, '@brackets'],
+            [/[{}()[\]]/, '@brackets'],
             [/[<>](?!@symbols)/, '@brackets'],
             [/@symbols/, {
                 cases: {
@@ -52,33 +56,20 @@ export const languageDef = {
             // numbers
             [/\d+/, 'number'],
 
-            // delimiter: after number because of .\d floats
-            // [/[;,.]/, 'delimiter'],
-
             // strings
-            [/"([^"\\]|\\.)*$/, 'string.invalid'],  // non-teminated string
-            [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
-
-            // characters
-            [/'[^\\']'/, 'string'],
-            [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
-            [/'/, 'string.invalid']
-        ],
-
-        comment: [
-            ["#", 'comment'],
+            { include: '@strings' },
         ],
 
         regexp: [
 			[/(\{)(\d+(?:,\d*)?)(\})/, ['regexp.escape.control', 'regexp.escape.control', 'regexp.escape.control']],
-			[/(\[)(\^?)(?=(?:[^\]\\\/]|\\.)+)/, ['regexp.escape.control', { token: 'regexp.escape.control', next: '@regexrange' }]],
+			[/(\[)(\^?)(?=(?:[^\]\\/]|\\.)+)/, ['regexp.escape.control', { token: 'regexp.escape.control', next: '@regexrange' }]],
 			[/(\()(\?:|\?=|\?!)/, ['regexp.escape.control', 'regexp.escape.control']],
 			[/[()]/, 'regexp.escape.control'],
 			[/@regexpctl/, 'regexp.escape.control'],
-			[/[^\\\/]/, 'regexp'],
+			[/[^\\/]/, 'regexp'],
 			[/@regexpesc/, 'regexp.escape'],
 			[/\\\./, 'regexp.invalid'],
-			[/(\/)([gimsuy]*)/, [{ token: 'regexp', bracket: '@close', next: '@pop' }, 'keyword.other']],
+			[/(\/)([imsxADSUXJu]*)/, [{ token: 'regexp', bracket: '@close', next: '@pop' }, 'keyword.other']],
 		],
 
 		regexrange: [
@@ -89,15 +80,26 @@ export const languageDef = {
 			[/\]/, { token: 'regexp.escape.control', next: '@pop', bracket: '@close' }],
 		],
 
-        string: [
-            [/[^\\"]+/, 'string'],
-            [/@escapes/, 'string.escape'],
-            [/\\./, 'string.escape.invalid'],
-            [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }]
+        strings: [
+			[/'/, 'string.escape', '@stringBody'],
+			[/"/, 'string.escape', '@dblStringBody'],
         ],
+        
+        stringBody: [
+			[/[^\\']+/, 'string'],
+			[/\\./, 'string'],
+			[/'/, 'string.escape', '@popall'],
+        ],
+        
+		dblStringBody: [
+			[/[^\\"]+/, 'string'],
+			[/\\./, 'string'],
+			[/"/, 'string.escape', '@popall'],
+		],
 
         whitespace: [
             [/[ \t\r\n]+/, 'white'],
+            [/(^#.*$)/, 'comment'],
         ],
     },
 };
