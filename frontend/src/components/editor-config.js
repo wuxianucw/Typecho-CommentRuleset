@@ -2,6 +2,7 @@ export const options = {
     fontFamily: "'Fira Code', Consolas, 'Courier New', monospace",
     fontLigatures: true,
     fontSize: 16,
+    wordWrap: "on",
 };
 
 export const languageDef = {
@@ -41,7 +42,7 @@ export const languageDef = {
 
             // regular expression: magic
             // [/\/(?=([^\\/]|\\.)+\/([imsxADSUXJu]*)(\s*)(\.|;|\/|,|\)|\]|\}|$))/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
-            [/\/(?=([^\\\/]|\\.)*)/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
+            [/\/(?=([^\\/]|\\.)*)/, { token: 'regexp', bracket: '@open', next: '@regexp' }],
 
             // delimiters and operators
             [/[{}()[\]]/, '@brackets'],

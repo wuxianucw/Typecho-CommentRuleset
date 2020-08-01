@@ -26,11 +26,11 @@ export default function RuleEditor(props) {
         setRuleText(newText);
     };
 
-    const editorWillMount = (editor) => {
-        if (!editor.languages.getLanguages().some(({ id }) => (id === "rule"))) {
-            editor.languages.register({ id: "rule" });
-            editor.languages.setMonarchTokensProvider("rule", languageDef);
-            editor.languages.setLanguageConfiguration("rule", langConf);
+    const editorWillMount = (monaco) => {
+        if (!monaco.languages.getLanguages().some(({ id }) => (id === "rule"))) {
+            monaco.languages.register({ id: "rule" });
+            monaco.languages.setMonarchTokensProvider("rule", languageDef);
+            monaco.languages.setLanguageConfiguration("rule", langConf);
         }
     };
 
