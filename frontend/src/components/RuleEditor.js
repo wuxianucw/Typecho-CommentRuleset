@@ -4,7 +4,7 @@ import Button from '@material-ui/core/Button';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import { ControlledEditor as MonacoEditor } from '@rimoe/react-monaco-editor';
 
-import { options as monacoOptions, languageDef, configuration as langConf } from './editor-config';
+import { options as monacoOptions, languageDef, configuration as langConf, createCompletionItems } from './editor-config';
 
 const useStyles = makeStyles((theme) => ({
 
@@ -16,7 +16,7 @@ export default function RuleEditor(props) {
 
     const [editMode, setEditMode] = React.useState(0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
     const [ruleStructure, setRuleStructure] = React.useState({ "#Main": ["uid", "==", 1] });
-    const [ruleText, setRuleText] = React.useState("");
+    const [ruleText, setRuleText] = React.useState(""); // MonacoEditor 不受控，onChange 任何时候都没有调用
 
     const handleSwitchMode = () => {
         setEditMode((mode) => [1, 0][mode]);
@@ -31,6 +31,20 @@ export default function RuleEditor(props) {
             monaco.languages.register({ id: "rule" });
             monaco.languages.setMonarchTokensProvider("rule", languageDef);
             monaco.languages.setLanguageConfiguration("rule", langConf);
+            monaco.languages.registerCompletionItemProvider("rule", {
+                provideCompletionItems: (model, position) => {
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn,
+                    };
+                    return {
+                        suggestions: createCompletionItems(range, monaco),
+                    };
+                }
+            });
         }
     };
 
