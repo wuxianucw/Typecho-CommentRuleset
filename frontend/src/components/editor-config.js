@@ -1,3 +1,9 @@
+export const monacoConfig = {
+    'vs/nls': {
+        availableLanguages: { '*': 'zh-cn' },
+    },
+};
+
 export const options = {
     fontFamily: "'Fira Code', Consolas, 'Courier New', monospace",
     fontLigatures: true,

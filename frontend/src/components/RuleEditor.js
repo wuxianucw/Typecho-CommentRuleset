@@ -2,9 +2,11 @@ import React from 'react';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import { ControlledEditor as MonacoEditor } from '@rimoe/react-monaco-editor';
+import { monacoLoader, MonacoEditor } from '@rimoe/react-monaco-editor';
 
-import { options as monacoOptions, languageDef, configuration as langConf, createCompletionItems } from './editor-config';
+import { monacoConfig, options as monacoOptions, languageDef, configuration as langConf, createCompletionItems } from './editor-config';
+
+monacoLoader.config(monacoConfig);
 
 const useStyles = makeStyles((theme) => ({
 
@@ -16,13 +18,13 @@ export default function RuleEditor(props) {
 
     const [editMode, setEditMode] = React.useState(0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
     const [ruleStructure, setRuleStructure] = React.useState({ "#Main": ["uid", "==", 1] });
-    const [ruleText, setRuleText] = React.useState(""); // MonacoEditor 不受控，onChange 任何时候都没有调用
+    const [ruleText, setRuleText] = React.useState("");
 
     const handleSwitchMode = () => {
         setEditMode((mode) => [1, 0][mode]);
     };
 
-    const handleEditorChange = (_, newText) => {
+    const handleEditorChange = (newText) => {
         setRuleText(newText);
     };
 
