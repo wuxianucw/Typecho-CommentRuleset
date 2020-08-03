@@ -27,7 +27,7 @@ export const languageDef = {
     symbols: /[=><!~-]+/,
 
     regexpctl: /[(){}[\]$^|\-*+?.]/,
-	regexpesc: /\\(?:[bBdDfnrstvwWn0\\/]|@regexpctl|c[A-Z]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/,
+    regexpesc: /\\(?:[bBdDfnrstvwWn0\\/]|@regexpctl|c[A-Z]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/,
 
     // The main tokenizer for rule
     tokenizer: {
@@ -68,41 +68,41 @@ export const languageDef = {
         ],
 
         regexp: [
-			[/(\{)(\d+(?:,\d*)?)(\})/, ['regexp.escape.control', 'regexp.escape.control', 'regexp.escape.control']],
-			[/(\[)(\^?)(?=(?:[^\]\\/]|\\.)+)/, ['regexp.escape.control', { token: 'regexp.escape.control', next: '@regexrange' }]],
-			[/(\()(\?:|\?=|\?!)/, ['regexp.escape.control', 'regexp.escape.control']],
-			[/[()]/, 'regexp.escape.control'],
-			[/@regexpctl/, 'regexp.escape.control'],
-			[/[^\\/]/, 'regexp'],
-			[/@regexpesc/, 'regexp.escape'],
-			[/\\\./, 'regexp.invalid'],
-			[/(\/)([imsxADSUXJu]*)/, [{ token: 'regexp', bracket: '@close', next: '@pop' }, 'keyword.other']],
-		],
+            [/(\{)(\d+(?:,\d*)?)(\})/, ['regexp.escape.control', 'regexp.escape.control', 'regexp.escape.control']],
+            [/(\[)(\^?)(?=(?:[^\]\\/]|\\.)+)/, ['regexp.escape.control', { token: 'regexp.escape.control', next: '@regexrange' }]],
+            [/(\()(\?:|\?=|\?!)/, ['regexp.escape.control', 'regexp.escape.control']],
+            [/[()]/, 'regexp.escape.control'],
+            [/@regexpctl/, 'regexp.escape.control'],
+            [/[^\\/]/, 'regexp'],
+            [/@regexpesc/, 'regexp.escape'],
+            [/\\\./, 'regexp.invalid'],
+            [/(\/)([imsxADSUXJu]*)/, [{ token: 'regexp', bracket: '@close', next: '@pop' }, 'keyword.other']],
+        ],
 
-		regexrange: [
-			[/-/, 'regexp.escape.control'],
-			[/\^/, 'regexp.invalid'],
-			[/@regexpesc/, 'regexp.escape'],
-			[/[^\]]/, 'regexp'],
-			[/\]/, { token: 'regexp.escape.control', next: '@pop', bracket: '@close' }],
-		],
+        regexrange: [
+            [/-/, 'regexp.escape.control'],
+            [/\^/, 'regexp.invalid'],
+            [/@regexpesc/, 'regexp.escape'],
+            [/[^\]]/, 'regexp'],
+            [/\]/, { token: 'regexp.escape.control', next: '@pop', bracket: '@close' }],
+        ],
 
         strings: [
-			[/'/, 'string.escape', '@stringBody'],
-			[/"/, 'string.escape', '@dblStringBody'],
+            [/'/, 'string.escape', '@stringBody'],
+            [/"/, 'string.escape', '@dblStringBody'],
         ],
         
         stringBody: [
-			[/[^\\']+/, 'string'],
-			[/\\./, 'string'],
-			[/'/, 'string.escape', '@popall'],
+            [/[^\\']+/, 'string'],
+            [/\\./, 'string'],
+            [/'/, 'string.escape', '@popall'],
         ],
         
-		dblStringBody: [
-			[/[^\\"]+/, 'string'],
-			[/\\./, 'string'],
-			[/"/, 'string.escape', '@popall'],
-		],
+        dblStringBody: [
+            [/[^\\"]+/, 'string'],
+            [/\\./, 'string'],
+            [/"/, 'string.escape', '@popall'],
+        ],
 
         whitespace: [
             [/[ \t\r\n]+/, 'white'],
