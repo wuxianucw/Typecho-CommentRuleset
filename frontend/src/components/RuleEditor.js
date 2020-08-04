@@ -1,6 +1,9 @@
 import React from 'react';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import TextField from '@material-ui/core/TextField';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import { monacoLoader, MonacoEditor } from '@rimoe/react-monaco-editor';
 
@@ -9,19 +12,165 @@ import { monacoConfig, options as monacoOptions, languageDef, configuration as l
 monacoLoader.config(monacoConfig);
 
 const useStyles = makeStyles((theme) => ({
-
+    judgeBlock: {
+        marginTop: theme.spacing(1),
+    },
+    judgeBlockLabel: {
+        boxSizing: "border-box",
+        width: "100%",
+        lineHeight: 1,
+        padding: "9px 14px",
+        color: "rgba(0, 0, 0, 0.38)",
+        fontWeight: 700,
+        fontSize: "12px",
+        border: "1px solid rgba(0, 0, 0, 0.12)",
+        borderRadius: "3px 3px 0 0",
+        userSelect: "none",
+    },
+    judgeBlockContent: {
+        border: "1px solid rgba(0, 0, 0, 0.12)",
+        borderTop: "none",
+        borderRadius: "0 0 3px 3px",
+        padding: "14px",
+        '& > div:nth-child(2)': {
+            marginTop: theme.spacing(1),
+        },
+    },
 }));
+
+function NameSelect({ value, onChange }) {
+    // ['uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua']
+    return (
+        <Select
+            value={value}
+            onChange={onChange}
+        >
+            <MenuItem value="uid">UID</MenuItem>
+            <MenuItem value="nick">昵称</MenuItem>
+            <MenuItem value="email">邮箱</MenuItem>
+            <MenuItem value="url">个人主页</MenuItem>
+            <MenuItem value="content">评论内容</MenuItem>
+            <MenuItem value="length">评论有效长度</MenuItem>
+            <MenuItem value="ip">IP</MenuItem>
+            <MenuItem value="ua">User-Agent</MenuItem>
+        </Select>
+    );
+}
+
+function OperatorSelect({ value, isNumeric, onChange }) {
+    // ['==', '!=', '<', '>', '<=', '>=', '<-', '~']
+    return isNumeric ? (
+        <Select
+            value={value}
+            onChange={onChange}
+        >
+            <MenuItem value="==">等于</MenuItem>
+            <MenuItem value="!=">不等于</MenuItem>
+            <MenuItem value="<">小于</MenuItem>
+            <MenuItem value=">">大于</MenuItem>
+            <MenuItem value="<=">小于或等于</MenuItem>
+            <MenuItem value=">=">大于或等于</MenuItem>
+        </Select>
+        ) : (
+        <Select
+            value={value}
+            onChange={onChange}
+        >
+            <MenuItem value="==">等于（全字匹配）</MenuItem>
+            <MenuItem value="!=">不等于（全字匹配）</MenuItem>
+            <MenuItem value="<-">包含</MenuItem>
+            <MenuItem value="~">符合（正则表达式）</MenuItem>
+        </Select>
+    );
+}
+
+function ActionSelect({ value, onChange }) {
+    // ['accept', 'review', 'spam', 'deny', 'skip']
+    return (
+        <Select
+            value={value}
+            onChange={onChange}
+        >
+            <MenuItem value="skip">无动作</MenuItem>
+            <MenuItem value="accept">通过评论</MenuItem>
+            <MenuItem value="review">标记为待审核</MenuItem>
+            <MenuItem value="spam">标记为垃圾</MenuItem>
+            <MenuItem value="deny">拒绝评论</MenuItem>
+            <MenuItem value="judge">继续判断</MenuItem>
+        </Select>
+    );
+}
+
+function randomKey() {
+    let res = "#";
+    for (let i = 0; i < 6; i++) res += Math.floor(Math.random() * 16).toString(16);
+    return res.toUpperCase();
+}
 
 export default function RuleEditor(props) {
     const theme = useTheme();
     const classes = useStyles();
 
     const [editMode, setEditMode] = React.useState(0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
-    const [ruleStructure, setRuleStructure] = React.useState({ "#Main": ["uid", "==", 1] });
+    const [ruleStructure, setRuleStructure] = React.useState([["#Main", "uid", "==", "", ["skip"], ["skip"]]]);
     const [ruleText, setRuleText] = React.useState("");
 
     const handleSwitchMode = () => {
         setEditMode((mode) => [1, 0][mode]);
+    };
+
+    const handleNameSwitchChange = (index, event) => {
+        const { value } = event.target; // see https://stackoverflow.com/a/56629758
+        setRuleStructure((oldValue) => {
+            let newValue = [...oldValue];
+            newValue[index][1] = value;
+            newValue[index][2] = "==";
+            newValue[index][3] = "";
+            return newValue;
+        });
+    };
+
+    const handleOperatorSwitchChange = (index, event) => {
+        const { value } = event.target;
+        setRuleStructure((oldValue) => {
+            let newValue = [...oldValue];
+            newValue[index][2] = value;
+            return newValue;
+        });
+    };
+
+    const handleValueTextChange = (index, event) => {
+        const { value } = event.target;
+        setRuleStructure((oldValue) => {
+            let newValue = [...oldValue];
+            newValue[index][3] = value;
+            return newValue;
+        });
+    };
+
+    const handleActionSelectChange = (index, actionType, event) => {
+        const { value } = event.target;
+        setRuleStructure((oldValue) => {
+            let newValue = [...oldValue], action = [...oldValue[index][4 + actionType]];
+            if (action[0] === value) return newValue;
+            if (value === "judge") { // 新增一个 block
+                const newKey = randomKey();
+                action = ["judge", newKey];
+                newValue.push([newKey, "uid", "==", "", ["skip"], ["skip"]]);
+            } else if (action[0] === "judge") { // 删除（可能是）一些 blocks
+                const subIndexes = [newValue.findIndex(([key]) => (key === action[1]))];
+                while (subIndexes.length > 0) {
+                    const refIndex = subIndexes.pop(), refData = [...newValue[refIndex]];
+                    if (refIndex < index) index--; // 此时当前项目的 index 将会前移
+                    newValue = newValue.slice(0, refIndex).concat(newValue.slice(refIndex + 1));
+                    if (refData[4][0] === "judge") subIndexes.push(newValue.findIndex(([key]) => (key === refData[4][1])));
+                    if (refData[5][0] === "judge") subIndexes.push(newValue.findIndex(([key]) => (key === refData[5][1])));
+                }
+                action = [value];
+            } else action = [value];
+            newValue[index][4 + actionType] = action;
+            return newValue;
+        });
     };
 
     const handleEditorChange = (newText) => {
@@ -61,7 +210,58 @@ export default function RuleEditor(props) {
             >切换到{["规则文本", "所见即所得"][editMode]}编辑模式</Button>
             <div style={{ marginTop: theme.spacing(1) }} />
             {editMode === 0 ? (
-                <div />
+                <div>{ruleStructure.map(([key, name, operator, value, then, otherwise], index) => {
+                    const isNumeric = ["uid", "length"].indexOf(name) !== -1;
+                    return (
+                        <div key={key} className={classes.judgeBlock}>
+                            <div className={classes.judgeBlockLabel}>{key}</div>
+                            <div className={classes.judgeBlockContent}>
+                                {/* 如果 {name} {operator} {value}，那么 {then}，否则 {otherwise} */}
+                                <div>
+                                    如果&emsp;
+                                    <NameSelect value={name} onChange={(event) => handleNameSwitchChange(index, event)} />
+                                    &emsp;
+                                    <OperatorSelect
+                                        value={operator}
+                                        isNumeric={isNumeric}
+                                        onChange={(event) => handleOperatorSwitchChange(index, event)}
+                                    />
+                                    &emsp;
+                                    {isNumeric ? (
+                                        <TextField
+                                            value={value}
+                                            onChange={(event) => handleValueTextChange(index, event)}
+                                            required
+                                            type="number"
+                                            margin="none"
+                                        />
+                                    ) : (
+                                        <TextField
+                                            value={value}
+                                            onChange={(event) => handleValueTextChange(index, event)}
+                                            multiline
+                                            fullWidth
+                                            helperText="允许多行，书写字符串时两侧无需加引号，书写正则表达式时需要使用 / 作为分隔符"
+                                            margin="none"
+                                            inputProps={{
+                                                style: { fontFamily: "'Fira Code', Consolas, 'Courier New', monospace" }
+                                            }}
+                                        />
+                                    )}
+                                </div>
+                                <div>
+                                    那么&emsp;
+                                    <ActionSelect value={then[0]} onChange={(event) => handleActionSelectChange(index, 0, event)} />
+                                    {/* button */}
+                                    &emsp;
+                                    否则&emsp;
+                                    <ActionSelect value={otherwise[0]} onChange={(event) => handleActionSelectChange(index, 1, event)} />
+                                    {/* button */}
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}</div>
             ) : (
                 <MonacoEditor
                     height="600px"
