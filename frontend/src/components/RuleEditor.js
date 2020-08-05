@@ -168,6 +168,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
         setEditMode((mode) => {
             if (mode === 0) setRuleText(structure2Rule());
             else {
+                if (ruleText.trim() === "") return 0;
                 setBackdropOpen(true);
                 axios.post(window.__pageData.apiBase, qs.stringify({
                     input: ruleText,
@@ -176,7 +177,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                         a: "translate",
                     },
                 }).then(({ data, status }) => {
-                    if (status === 204);
+                    if (status === 204) setEditMode(0);
                     else if (status === 201) setCompileError(data.result);
                     else if (status === 200) {
                         const structure = [];
@@ -196,14 +197,16 @@ const RuleEditor = React.forwardRef((props, ref) => {
                             ]);
                         }
                         setRuleStructure(structure);
+                        setEditMode(0);
                     } else console.warn(`Unknown status code: ${status}.`);
                     setBackdropOpen(false);
                 }).catch((error) => {
                     console.log(error);
+                    alert("请求后端 API 失败！");
                     setBackdropOpen(false);
                 });
             }
-            return [1, 0][mode];
+            return 1;
         });
     }
 
@@ -419,10 +422,11 @@ const RuleEditor = React.forwardRef((props, ref) => {
             >
                 <DialogTitle>规则编译失败！</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
-                        <p dangerouslySetInnerHTML={{ __html: compileError }} />
-                        <p>如果要强制切换，请将输入框清空。</p>
-                    </DialogContentText>
+                    <DialogContentText
+                        dangerouslySetInnerHTML={{
+                            __html: compileError + "<br />如果需要强制切换，请将输入框清空。强制切换将会使当前编辑内容丢失。"
+                        }}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setCompileError("")} color="primary" autoFocus>
