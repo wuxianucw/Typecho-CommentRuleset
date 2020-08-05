@@ -39,6 +39,7 @@ export default function EditPage(props) {
     const [priority, setPriority] = React.useState(10);
     const [nameError, setNameError] = React.useState(false);
     const [priorityError, setPriorityError] = React.useState(false);
+    const editorRef = React.useRef(); // 使用 editorRef.current.getRuleText() 来获取规则文本
 
     React.useEffect(() => {
         const source = axios.CancelToken.source();
@@ -139,7 +140,7 @@ export default function EditPage(props) {
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
             />
-            <RuleEditor />
+            <RuleEditor ref={editorRef} />
         </Container>
     ) : (
         <div className={classes.placeholder}>

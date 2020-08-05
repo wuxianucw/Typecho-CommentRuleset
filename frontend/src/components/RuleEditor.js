@@ -109,7 +109,7 @@ function randomKey() {
     return res.toUpperCase();
 }
 
-export default function RuleEditor(props) {
+const RuleEditor = React.forwardRef((props, ref) => {
     const theme = useTheme();
     const classes = useStyles();
 
@@ -118,7 +118,29 @@ export default function RuleEditor(props) {
     const [highlightBlock, setHighlightBlock] = React.useState([undefined, undefined]);
     const [ruleText, setRuleText] = React.useState("");
 
+    const structure2Rule = () => { // 使用 structure2Rule() 获得完整规则文本
+        const _structure2Rule = (index) => {
+            const [, name, operator, _value, _then, _otherwise] = ruleStructure[index];
+            const value = (["uid", "length"].indexOf(name) === -1 && operator !== "~")
+                ? `'${_value.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'`
+                : _value;
+            const then = (_then[0] === "judge")
+                ? _structure2Rule(ruleStructure.findIndex(([key]) => (key === _then[1])))
+                : _then[0];
+            const otherwise = (_otherwise[0] === "judge")
+                ? _structure2Rule(ruleStructure.findIndex(([key]) => (key === _otherwise[1])))
+                : _otherwise[0];
+            return `[ ${name} ${operator} ${value} ] : ${then} ! ${otherwise} ;`;
+        }
+        return _structure2Rule(0);
+    };
+
+    React.useImperativeHandle(ref, () => ({
+        getRuleText: () => (editMode === 0 ? structure2Rule() : ruleText),
+    }));
+
     const handleSwitchMode = () => {
+        setRuleText(structure2Rule());
         setEditMode((mode) => [1, 0][mode]);
     };
 
@@ -311,4 +333,6 @@ export default function RuleEditor(props) {
             )}
         </>
     );
-}
+});
+
+export default RuleEditor;
