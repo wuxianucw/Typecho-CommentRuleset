@@ -1,4 +1,6 @@
 import React from 'react';
+import axios from 'axios';
+import qs from 'qs';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
@@ -6,6 +8,13 @@ import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import { monacoLoader, MonacoEditor } from '@rimoe/react-monaco-editor';
 
@@ -37,6 +46,10 @@ const useStyles = makeStyles((theme) => ({
         '& > div:nth-child(2)': {
             marginTop: theme.spacing(1),
         },
+    },
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
     },
 }));
 
@@ -114,6 +127,9 @@ const RuleEditor = React.forwardRef((props, ref) => {
     const classes = useStyles();
 
     const [editMode, setEditMode] = React.useState(0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
+    const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
+    const [backdropOpen, setBackdropOpen] = React.useState(false);
+    const [compileError, setCompileError] = React.useState("");
     const [ruleStructure, setRuleStructure] = React.useState([["#Main", "uid", "==", "", ["skip"], ["skip"], undefined]]);
     const [highlightBlock, setHighlightBlock] = React.useState([undefined, undefined]);
     const [ruleText, setRuleText] = React.useState("");
@@ -140,9 +156,56 @@ const RuleEditor = React.forwardRef((props, ref) => {
     }));
 
     const handleSwitchMode = () => {
-        setRuleText(structure2Rule());
-        setEditMode((mode) => [1, 0][mode]);
+        setConfirmDialogOpen(true);
     };
+
+    const handleConfirmDialogClose = () => {
+        setConfirmDialogOpen(false);
+    };
+
+    const handleConfirmDialogConfirmClick = () => {
+        setConfirmDialogOpen(false);
+        setEditMode((mode) => {
+            if (mode === 0) setRuleText(structure2Rule());
+            else {
+                setBackdropOpen(true);
+                axios.post(window.__pageData.apiBase, qs.stringify({
+                    input: ruleText,
+                }), {
+                    params: {
+                        a: "translate",
+                    },
+                }).then(({ data, status }) => {
+                    if (status === 204);
+                    else if (status === 201) setCompileError(data.result);
+                    else if (status === 200) {
+                        const structure = [];
+                        for (let key in data) {
+                            const current = data[key];
+                            if (!current.then) current.then = "skip";
+                            if (!current.else) current.else = "skip";
+                            structure.push([
+                                key, current.name, current.optr, current.target,
+                                (current.then.indexOf("#") !== -1)
+                                    ? ["judge", current.then]
+                                    : [current.then],
+                                (current.else.indexOf("#") !== -1)
+                                    ? ["judge", current.else]
+                                    : [current.else],
+                                current.parent ?? undefined
+                            ]);
+                        }
+                        setRuleStructure(structure);
+                    } else console.warn(`Unknown status code: ${status}.`);
+                    setBackdropOpen(false);
+                }).catch((error) => {
+                    console.log(error);
+                    setBackdropOpen(false);
+                });
+            }
+            return [1, 0][mode];
+        });
+    }
 
     const handleNameSwitchChange = (index, event) => {
         const { value } = event.target; // see https://stackoverflow.com/a/56629758
@@ -331,6 +394,45 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     options={monacoOptions}
                 />
             )}
+            <Dialog
+                open={confirmDialogOpen}
+                onClose={handleConfirmDialogClose}
+            >
+                <DialogTitle>确定要切换吗？</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        由于对已有内容的转换不保证 100% 兼容，我们更建议仅使用一种模式来编辑规则。（如果您还没有开始编辑规则，请忽略此提示直接点击确定）
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleConfirmDialogConfirmClick} color="secondary">
+                        确定
+                    </Button>
+                    <Button onClick={handleConfirmDialogClose} color="primary" autoFocus>
+                        取消
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={compileError !== ""}
+                onClose={() => setCompileError("")}
+            >
+                <DialogTitle>规则编译失败！</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        <p dangerouslySetInnerHTML={{ __html: compileError }} />
+                        <p>如果要强制切换，请将输入框清空。</p>
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setCompileError("")} color="primary" autoFocus>
+                        确定
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Backdrop className={classes.backdrop} open={backdropOpen}>
+                <CircularProgress color="inherit" />
+            </Backdrop>
         </>
     );
 });
