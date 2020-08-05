@@ -4,6 +4,8 @@ import Button from '@material-ui/core/Button';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import { monacoLoader, MonacoEditor } from '@rimoe/react-monaco-editor';
 
@@ -112,7 +114,8 @@ export default function RuleEditor(props) {
     const classes = useStyles();
 
     const [editMode, setEditMode] = React.useState(0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
-    const [ruleStructure, setRuleStructure] = React.useState([["#Main", "uid", "==", "", ["skip"], ["skip"]]]);
+    const [ruleStructure, setRuleStructure] = React.useState([["#Main", "uid", "==", "", ["skip"], ["skip"], undefined]]);
+    const [highlightBlock, setHighlightBlock] = React.useState([undefined, undefined]);
     const [ruleText, setRuleText] = React.useState("");
 
     const handleSwitchMode = () => {
@@ -156,7 +159,7 @@ export default function RuleEditor(props) {
             if (value === "judge") { // 新增一个 block
                 const newKey = randomKey();
                 action = ["judge", newKey];
-                newValue.push([newKey, "uid", "==", "", ["skip"], ["skip"]]);
+                newValue.push([newKey, "uid", "==", "", ["skip"], ["skip"], oldValue[index][0]]);
             } else if (action[0] === "judge") { // 删除（可能是）一些 blocks
                 const subIndexes = [newValue.findIndex(([key]) => (key === action[1]))];
                 while (subIndexes.length > 0) {
@@ -170,6 +173,16 @@ export default function RuleEditor(props) {
             } else action = [value];
             newValue[index][4 + actionType] = action;
             return newValue;
+        });
+    };
+
+    const handleHighlightButtonClick = (key) => {
+        document.querySelector(`div[data-key="${key}"]`).scrollIntoView();
+        setHighlightBlock(([_, timeoutId]) => {
+            if (timeoutId !== undefined) clearTimeout(timeoutId);
+            return [key, setTimeout(() => {
+                setHighlightBlock([undefined, undefined]);
+            }, 1000)];
         });
     };
 
@@ -210,14 +223,25 @@ export default function RuleEditor(props) {
             >切换到{["规则文本", "所见即所得"][editMode]}编辑模式</Button>
             <div style={{ marginTop: theme.spacing(1) }} />
             {editMode === 0 ? (
-                <div>{ruleStructure.map(([key, name, operator, value, then, otherwise], index) => {
+                <div>{ruleStructure.map(([key, name, operator, value, then, otherwise, refKey], index) => {
                     const isNumeric = ["uid", "length"].indexOf(name) !== -1;
+                    const isHighlight = highlightBlock[0] === key;
                     return (
-                        <div key={key} className={classes.judgeBlock}>
-                            <div className={classes.judgeBlockLabel}>{key}</div>
+                        <div key={key} className={classes.judgeBlock} data-key={key}>
+                            <div
+                                className={classes.judgeBlockLabel}
+                                style={isHighlight ? { background: "#fffdd1" } : {}}
+                            >{key}</div>
                             <div className={classes.judgeBlockContent}>
                                 {/* 如果 {name} {operator} {value}，那么 {then}，否则 {otherwise} */}
                                 <div>
+                                    {refKey !== undefined && (<>
+                                        <Button
+                                            startIcon={<ArrowUpwardIcon />}
+                                            onClick={() => handleHighlightButtonClick(refKey)}
+                                        >{refKey}</Button>
+                                        &emsp;
+                                    </>)}
                                     如果&emsp;
                                     <NameSelect value={name} onChange={(event) => handleNameSwitchChange(index, event)} />
                                     &emsp;
@@ -252,11 +276,23 @@ export default function RuleEditor(props) {
                                 <div>
                                     那么&emsp;
                                     <ActionSelect value={then[0]} onChange={(event) => handleActionSelectChange(index, 0, event)} />
-                                    {/* button */}
+                                    {then[0] === "judge" && (<>
+                                        &emsp;
+                                        <Button
+                                            startIcon={<ArrowDownwardIcon />}
+                                            onClick={() => handleHighlightButtonClick(then[1])}
+                                        >{then[1]}</Button>
+                                    </>)}
                                     &emsp;
                                     否则&emsp;
                                     <ActionSelect value={otherwise[0]} onChange={(event) => handleActionSelectChange(index, 1, event)} />
-                                    {/* button */}
+                                    {otherwise[0] === "judge" && (<>
+                                        &emsp;
+                                        <Button
+                                            startIcon={<ArrowDownwardIcon />}
+                                            onClick={() => handleHighlightButtonClick(otherwise[1])}
+                                        >{otherwise[1]}</Button>
+                                    </>)}
                                 </div>
                             </div>
                         </div>
