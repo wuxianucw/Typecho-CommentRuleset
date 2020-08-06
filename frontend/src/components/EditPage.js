@@ -7,8 +7,11 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
+import Button from '@material-ui/core/Button';
+import SaveIcon from '@material-ui/icons/Save';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import useTheme from '@material-ui/core/styles/useTheme';
+import { green } from '@material-ui/core/colors';
 
 import RuleEditor from './RuleEditor';
 
@@ -25,6 +28,12 @@ const useStyles = makeStyles((theme) => ({
             width: "50%",
         },
     },
+    buttonSuccess: {
+        backgroundColor: green[500],
+        '&:hover': {
+            backgroundColor: green[700],
+        },
+    },
 }));
 
 export default function EditPage(props) {
@@ -39,6 +48,10 @@ export default function EditPage(props) {
     const [priority, setPriority] = React.useState(10);
     const [nameError, setNameError] = React.useState(false);
     const [priorityError, setPriorityError] = React.useState(false);
+    const [editMode, setEditMode] = React.useState(0);
+    const [ruleData, setRuleData] = React.useState(undefined);
+    const [ruleText, setRuleText] = React.useState("");
+    const [isSaved, setIsSaved] = React.useState(false);
     const editorRef = React.useRef(); // 使用 editorRef.current.getRuleText() 来获取规则文本
 
     React.useEffect(() => {
@@ -51,11 +64,14 @@ export default function EditPage(props) {
                 },
                 cancelToken: source.token,
             }).then(({ data }) => {
-                setInitialState(true);
                 setName(data.name);
                 setRemark(data.remark);
                 setStatus(data.status);
                 setPriority(data.priority);
+                setEditMode(data.editMode);
+                if (data.editMode === 0) setRuleData(data.ruleData);
+                else setRuleText(data.ruleText);
+                setInitialState(true);
             }).catch((error) => {
                 if (!axios.isCancel(error)) history.push("/overview");
             });
@@ -88,6 +104,14 @@ export default function EditPage(props) {
 
     const handleRemarkChange = (event) => {
         setRemark(event.target.value);
+    };
+
+    const handleRuleEditorChange = () => {
+        setIsSaved(false);
+    };
+
+    const handleSaveButtonClick = () => {
+        setIsSaved(true);
     };
 
     return initialState ? (
@@ -140,7 +164,22 @@ export default function EditPage(props) {
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
             />
-            <RuleEditor ref={editorRef} />
+            <RuleEditor
+                ref={editorRef}
+                defaultEditMode={editMode}
+                defaultRuleData={ruleData}
+                defaultRuleText={ruleText}
+                onChange={handleRuleEditorChange}
+            />
+            <Button
+                variant="contained"
+                disableElevation
+                color="primary"
+                className={isSaved ? classes.buttonSuccess : ""}
+                startIcon={<SaveIcon />}
+                onClick={handleSaveButtonClick}
+                style={{ marginTop: theme.spacing(1) }}
+            >保存</Button>
         </Container>
     ) : (
         <div className={classes.placeholder}>
