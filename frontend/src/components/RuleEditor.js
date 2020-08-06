@@ -43,7 +43,7 @@ const useStyles = makeStyles((theme) => ({
         borderTop: "none",
         borderRadius: "0 0 3px 3px",
         padding: "14px",
-        '& > div:nth-child(2)': {
+        '&>div:nth-child(2)': {
             marginTop: theme.spacing(1),
         },
     },
@@ -122,17 +122,42 @@ function randomKey() {
     return res.toUpperCase();
 }
 
+function translateData(data) {
+    if (typeof data !== "object" || !data) return undefined;
+    const structure = [];
+    for (let key in data) {
+        const current = data[key];
+        if (!current.then) current.then = "skip";
+        if (!current.else) current.else = "skip";
+        structure.push([
+            key, current.name, current.optr, current.target,
+            (current.then.indexOf("#") !== -1)
+                ? ["judge", current.then]
+                : [current.then],
+            (current.else.indexOf("#") !== -1)
+                ? ["judge", current.else]
+                : [current.else],
+            current.parent ?? undefined
+        ]);
+    }
+    if (structure.length === 0) return undefined;
+    return structure;
+}
+
 const RuleEditor = React.forwardRef((props, ref) => {
     const theme = useTheme();
     const classes = useStyles();
 
-    const [editMode, setEditMode] = React.useState(0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
+    const onChange = props.onChange ?? (() => {});
+    const [editMode, setEditMode] = React.useState(props.defaultEditMode ?? 0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
     const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
     const [backdropOpen, setBackdropOpen] = React.useState(false);
     const [compileError, setCompileError] = React.useState("");
-    const [ruleStructure, setRuleStructure] = React.useState([["#Main", "uid", "==", "", ["skip"], ["skip"], undefined]]);
+    const [compileErrorDialogOpen, setCompileErrorDialogOpen] = React.useState(false);
+    const [ruleStructure, setRuleStructure] = React.useState(translateData(props.defaultRuleData)
+        ?? [["#Main", "uid", "==", "", ["skip"], ["skip"], undefined]]);
     const [highlightBlock, setHighlightBlock] = React.useState([undefined, undefined]);
-    const [ruleText, setRuleText] = React.useState("");
+    const [ruleText, setRuleText] = React.useState(props.defaultRuleText ?? "");
 
     const structure2Rule = () => { // 使用 structure2Rule() 获得完整规则文本
         const _structure2Rule = (index) => {
@@ -152,8 +177,19 @@ const RuleEditor = React.forwardRef((props, ref) => {
     };
 
     React.useImperativeHandle(ref, () => ({
+        editMode: editMode,
         getRuleText: () => (editMode === 0 ? structure2Rule() : ruleText),
     }));
+
+    const isFirstRun = React.useRef(true);
+    React.useEffect(() => {
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
+        }
+        onChange();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editMode, ruleStructure, ruleText]);
 
     const handleSwitchMode = () => {
         setConfirmDialogOpen(true);
@@ -178,25 +214,11 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     },
                 }).then(({ data, status }) => {
                     if (status === 204) setEditMode(0);
-                    else if (status === 201) setCompileError(data.result);
-                    else if (status === 200) {
-                        const structure = [];
-                        for (let key in data) {
-                            const current = data[key];
-                            if (!current.then) current.then = "skip";
-                            if (!current.else) current.else = "skip";
-                            structure.push([
-                                key, current.name, current.optr, current.target,
-                                (current.then.indexOf("#") !== -1)
-                                    ? ["judge", current.then]
-                                    : [current.then],
-                                (current.else.indexOf("#") !== -1)
-                                    ? ["judge", current.else]
-                                    : [current.else],
-                                current.parent ?? undefined
-                            ]);
-                        }
-                        setRuleStructure(structure);
+                    else if (status === 201) {
+                        setCompileError(data.result);
+                        setCompileErrorDialogOpen(true);
+                    } else if (status === 200) {
+                        setRuleStructure(translateData(data));
                         setEditMode(0);
                     } else console.warn(`Unknown status code: ${status}.`);
                     setBackdropOpen(false);
@@ -209,6 +231,10 @@ const RuleEditor = React.forwardRef((props, ref) => {
             return 1;
         });
     }
+
+    const handleCompileErrorDialogClose = () => {
+        setCompileErrorDialogOpen(false);
+    };
 
     const handleNameSwitchChange = (index, event) => {
         const { value } = event.target; // see https://stackoverflow.com/a/56629758
@@ -265,7 +291,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
     };
 
     const handleHighlightButtonClick = (key) => {
-        document.querySelector(`div[data-key="${key}"]`).scrollIntoView();
+        ((element) => (element && element.scrollIntoView()))(document.querySelector(`div[data-key="${key}"]`));
         setHighlightBlock(([_, timeoutId]) => {
             if (timeoutId !== undefined) clearTimeout(timeoutId);
             return [key, setTimeout(() => {
@@ -305,7 +331,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
             <InputLabel required shrink>规则内容</InputLabel>
             <div style={{ marginTop: theme.spacing(1) }} />
             <Button
-                variant="contained"
+                variant="outlined"
                 color={["primary", "secondary"][editMode]}
                 onClick={handleSwitchMode}
             >切换到{["规则文本", "所见即所得"][editMode]}编辑模式</Button>
@@ -417,8 +443,8 @@ const RuleEditor = React.forwardRef((props, ref) => {
                 </DialogActions>
             </Dialog>
             <Dialog
-                open={compileError !== ""}
-                onClose={() => setCompileError("")}
+                open={compileErrorDialogOpen}
+                onClose={handleCompileErrorDialogClose}
             >
                 <DialogTitle>规则编译失败！</DialogTitle>
                 <DialogContent>
@@ -429,7 +455,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setCompileError("")} color="primary" autoFocus>
+                    <Button onClick={handleCompileErrorDialogClose} color="primary" autoFocus>
                         确定
                     </Button>
                 </DialogActions>
