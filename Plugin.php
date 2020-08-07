@@ -151,10 +151,10 @@ HTML
      * 
      * @access public
      * @param array $ruleset
-     * @return void
+     * @return int|false
      */
     public static function saveRuleset($ruleset) {
-        file_put_contents(dirname(__FILE__) . '/runtime/ruleset.php',
+        return file_put_contents(dirname(__FILE__) . '/runtime/ruleset.php',
             "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
             . str_replace(array('\\', '\''), array('\\\\', '\\\''), serialize($ruleset)) . "';\n");
     }
