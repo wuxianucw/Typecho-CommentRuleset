@@ -53,12 +53,13 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function NameSelect({ value, onChange }) {
+function NameSelect({ value, onChange, ...other }) {
     // ['uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua']
     return (
         <Select
             value={value}
             onChange={onChange}
+            {...other}
         >
             <MenuItem value="uid">UID</MenuItem>
             <MenuItem value="nick">昵称</MenuItem>
@@ -72,12 +73,13 @@ function NameSelect({ value, onChange }) {
     );
 }
 
-function OperatorSelect({ value, isNumeric, onChange }) {
+function OperatorSelect({ value, isNumeric, onChange, ...other }) {
     // ['==', '!=', '<', '>', '<=', '>=', '<-', '~']
     return isNumeric ? (
         <Select
             value={value}
             onChange={onChange}
+            {...other}
         >
             <MenuItem value="==">等于</MenuItem>
             <MenuItem value="!=">不等于</MenuItem>
@@ -99,12 +101,13 @@ function OperatorSelect({ value, isNumeric, onChange }) {
     );
 }
 
-function ActionSelect({ value, onChange }) {
+function ActionSelect({ value, onChange, ...other }) {
     // ['accept', 'review', 'spam', 'deny', 'skip']
     return (
         <Select
             value={value}
             onChange={onChange}
+            {...other}
         >
             <MenuItem value="skip">无动作</MenuItem>
             <MenuItem value="accept">通过评论</MenuItem>
@@ -149,6 +152,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
     const classes = useStyles();
 
     const onChange = props.onChange ?? (() => {});
+    const disabled = props.disabled ?? false;
     const [editMode, setEditMode] = React.useState(props.defaultEditMode ?? 0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
     const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
     const [backdropOpen, setBackdropOpen] = React.useState(false);
@@ -199,12 +203,19 @@ const RuleEditor = React.forwardRef((props, ref) => {
         setConfirmDialogOpen(false);
     };
 
+    const source = React.useRef();
+    React.useEffect(() => (() => {
+        if (backdropOpen) source.current.cancel();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), []);
+
     const handleConfirmDialogConfirmClick = () => {
         setConfirmDialogOpen(false);
         setEditMode((mode) => {
             if (mode === 0) setRuleText(structure2Rule());
             else {
                 if (ruleText.trim() === "") return 0;
+                source.current = axios.CancelToken.source();
                 setBackdropOpen(true);
                 axios.post(window.__pageData.apiBase, qs.stringify({
                     input: ruleText,
@@ -212,6 +223,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     params: {
                         a: "translate",
                     },
+                    cancelToken: source.current.token,
                 }).then(({ data, status }) => {
                     if (status === 204) setEditMode(0);
                     else if (status === 201) {
@@ -223,8 +235,10 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     } else console.warn(`Unknown status code: ${status}.`);
                     setBackdropOpen(false);
                 }).catch((error) => {
-                    console.log(error);
-                    alert("请求后端 API 失败！");
+                    if (!axios.isCancel(error)) {
+                        console.error(error);
+                        alert("请求后端 API 失败！");
+                    }
                     setBackdropOpen(false);
                 });
             }
@@ -328,12 +342,13 @@ const RuleEditor = React.forwardRef((props, ref) => {
 
     return (
         <>
-            <InputLabel required shrink>规则内容</InputLabel>
+            <InputLabel required shrink disabled={disabled}>规则内容</InputLabel>
             <div style={{ marginTop: theme.spacing(1) }} />
             <Button
                 variant="outlined"
                 color={["primary", "secondary"][editMode]}
                 onClick={handleSwitchMode}
+                disabled={disabled}
             >切换到{["规则文本", "所见即所得"][editMode]}编辑模式</Button>
             <div style={{ marginTop: theme.spacing(1) }} />
             {editMode === 0 ? (
@@ -346,23 +361,29 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                 className={classes.judgeBlockLabel}
                                 style={isHighlight ? { background: "#fffdd1" } : {}}
                             >{key}</div>
-                            <div className={classes.judgeBlockContent}>
+                            <div className={classes.judgeBlockContent} style={disabled ? { color: "rgba(0, 0, 0, 0.38)" } : {}}>
                                 {/* 如果 {name} {operator} {value}，那么 {then}，否则 {otherwise} */}
                                 <div>
                                     {refKey !== undefined && (<>
                                         <Button
                                             startIcon={<ArrowUpwardIcon />}
                                             onClick={() => handleHighlightButtonClick(refKey)}
+                                            disabled={disabled}
                                         >{refKey}</Button>
                                         &emsp;
                                     </>)}
                                     如果&emsp;
-                                    <NameSelect value={name} onChange={(event) => handleNameSwitchChange(index, event)} />
+                                    <NameSelect
+                                        value={name}
+                                        onChange={(event) => handleNameSwitchChange(index, event)}
+                                        disabled={disabled}
+                                    />
                                     &emsp;
                                     <OperatorSelect
                                         value={operator}
                                         isNumeric={isNumeric}
                                         onChange={(event) => handleOperatorSwitchChange(index, event)}
+                                        disabled={disabled}
                                     />
                                     &emsp;
                                     {isNumeric ? (
@@ -372,6 +393,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                             required
                                             type="number"
                                             margin="none"
+                                            disabled={disabled}
                                         />
                                     ) : (
                                         <TextField
@@ -384,27 +406,38 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                             inputProps={{
                                                 style: { fontFamily: "'Fira Code', Consolas, 'Courier New', monospace" }
                                             }}
+                                            disabled={disabled}
                                         />
                                     )}
                                 </div>
                                 <div>
                                     那么&emsp;
-                                    <ActionSelect value={then[0]} onChange={(event) => handleActionSelectChange(index, 0, event)} />
+                                    <ActionSelect
+                                        value={then[0]}
+                                        onChange={(event) => handleActionSelectChange(index, 0, event)}
+                                        disabled={disabled}
+                                    />
                                     {then[0] === "judge" && (<>
                                         &emsp;
                                         <Button
                                             startIcon={<ArrowDownwardIcon />}
                                             onClick={() => handleHighlightButtonClick(then[1])}
+                                            disabled={disabled}
                                         >{then[1]}</Button>
                                     </>)}
                                     &emsp;
                                     否则&emsp;
-                                    <ActionSelect value={otherwise[0]} onChange={(event) => handleActionSelectChange(index, 1, event)} />
+                                    <ActionSelect
+                                        value={otherwise[0]}
+                                        onChange={(event) => handleActionSelectChange(index, 1, event)}
+                                        disabled={disabled}
+                                    />
                                     {otherwise[0] === "judge" && (<>
                                         &emsp;
                                         <Button
                                             startIcon={<ArrowDownwardIcon />}
                                             onClick={() => handleHighlightButtonClick(otherwise[1])}
+                                            disabled={disabled}
                                         >{otherwise[1]}</Button>
                                     </>)}
                                 </div>
@@ -420,7 +453,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     value={ruleText}
                     onChange={handleEditorChange}
                     editorWillMount={editorWillMount}
-                    options={monacoOptions}
+                    options={{ readOnly: disabled, ...monacoOptions }}
                 />
             )}
             <Dialog
