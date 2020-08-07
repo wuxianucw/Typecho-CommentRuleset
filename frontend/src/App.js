@@ -1,8 +1,10 @@
-import React, { lazy, Suspense, Fragment } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { HashRouter as Router, Route, Redirect } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import Fade from '@material-ui/core/Fade';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { darken, makeStyles } from '@material-ui/core/styles';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core';
 import { blue, pink } from '@material-ui/core/colors';
@@ -36,6 +38,12 @@ const useStyles = makeStyles((theme) => ({
     toolbar: theme.mixins.toolbar,
     content: {
         padding: theme.spacing(3),
+    },
+    placeholder: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        paddingTop: theme.spacing(8),
     },
 }));
 
@@ -90,7 +98,13 @@ export default function App() {
                             }}
                         </Route>
                         <main className={classes.content}>
-                            <Suspense fallback={<Fragment />}>
+                            <Suspense fallback={
+                                <div className={classes.placeholder}>
+                                    <Fade in unmountOnExit style={{ transitionDelay: '800ms' }}>
+                                        <CircularProgress color="secondary" />
+                                    </Fade>
+                                </div>
+                            }>
                                 <Route path="/overview" component={(props) => <OverviewPage rows={rules} {...props} />} />
                                 <Route path="/edit/:ruid?" component={EditPage} />
                                 <Route path="/guide" component={GuidePage} />
