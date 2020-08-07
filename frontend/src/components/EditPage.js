@@ -1,5 +1,6 @@
 import React from 'react';
 import axios from 'axios';
+import qs from 'qs';
 import Fade from '@material-ui/core/Fade';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Container from '@material-ui/core/Container';
@@ -28,11 +29,24 @@ const useStyles = makeStyles((theme) => ({
             width: "50%",
         },
     },
+    wrapper: {
+        marginTop: theme.spacing(1),
+        position: 'relative',
+        display: 'inline-block',
+    },
     buttonSuccess: {
         backgroundColor: green[500],
         '&:hover': {
             backgroundColor: green[700],
         },
+    },
+    buttonProgress: {
+        color: green[500],
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        marginTop: -12,
+        marginLeft: -12,
     },
 }));
 
@@ -51,18 +65,20 @@ export default function EditPage(props) {
     const [editMode, setEditMode] = React.useState(0);
     const [ruleData, setRuleData] = React.useState(undefined);
     const [ruleText, setRuleText] = React.useState("");
-    const [isSaved, setIsSaved] = React.useState(false);
+    const [isSaved, setIsSaved] = React.useState(ruid ? true : false);
+    const [saving, setSaving] = React.useState(false);
     const editorRef = React.useRef(); // 使用 editorRef.current.getRuleText() 来获取规则文本
 
+    const source = React.useRef();
     React.useEffect(() => {
-        const source = axios.CancelToken.source();
+        source.current = axios.CancelToken.source();
         if (!initialState) {
             axios.get(window.__pageData.apiBase, {
                 params: {
                     a: "ruleDetails",
                     ruid: ruid,
                 },
-                cancelToken: source.token,
+                cancelToken: source.current.token,
             }).then(({ data }) => {
                 setName(data.name);
                 setRemark(data.remark);
@@ -77,7 +93,7 @@ export default function EditPage(props) {
             });
         }
         return () => {
-            if (!initialState) source.cancel();
+            if (!initialState || saving) source.current.cancel();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -111,7 +127,30 @@ export default function EditPage(props) {
     };
 
     const handleSaveButtonClick = () => {
-        setIsSaved(true);
+        if (isSaved || saving) return;
+        // TODO: 表单验证
+        source.current = axios.CancelToken.source();
+        setSaving(true);
+        axios.post(window.__pageData.apiBase, qs.stringify({
+            ruid: ruid ? ruid : "",
+            name: name,
+            status: status,
+            remark: remark,
+            priority: priority,
+            rule: editorRef.current.getRuleText(),
+            editMode: editorRef.current.editMode,
+        }), {
+            params: {
+                a: "saveRule",
+            },
+            cancelToken: source.current.token,
+        }).then(({ data, status }) => {
+            // TODO
+        }).catch((error) => {
+            if (!axios.isCancel(error)) {
+                // TODO
+            }
+        });
     };
 
     return initialState ? (
@@ -130,6 +169,7 @@ export default function EditPage(props) {
                     variant="outlined"
                     margin="normal"
                     className={classes.nameInput}
+                    disabled={saving}
                 />
                 <TextField
                     value={priority}
@@ -142,6 +182,7 @@ export default function EditPage(props) {
                     variant="outlined"
                     margin="normal"
                     style={{ width: "25%", marginLeft: theme.spacing(2) }}
+                    disabled={saving}
                 />
                 <div style={{ flexGrow: 1 }} />
                 <FormControlLabel
@@ -149,6 +190,7 @@ export default function EditPage(props) {
                         <Checkbox
                             checked={status.indexOf("on") !== -1}
                             onChange={handleIsEnabledChange}
+                            disabled={saving}
                         />
                     }
                     label="启用规则"
@@ -163,6 +205,7 @@ export default function EditPage(props) {
                 helperText="可以为空，允许多行"
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
+                disabled={saving}
             />
             <RuleEditor
                 ref={editorRef}
@@ -170,16 +213,20 @@ export default function EditPage(props) {
                 defaultRuleData={ruleData}
                 defaultRuleText={ruleText}
                 onChange={handleRuleEditorChange}
+                disabled={saving}
             />
-            <Button
-                variant="contained"
-                disableElevation
-                color="primary"
-                className={isSaved ? classes.buttonSuccess : ""}
-                startIcon={<SaveIcon />}
-                onClick={handleSaveButtonClick}
-                style={{ marginTop: theme.spacing(1) }}
-            >保存</Button>
+            <div className={classes.wrapper}>
+                <Button
+                    variant="contained"
+                    disableElevation
+                    color="primary"
+                    className={isSaved ? classes.buttonSuccess : ""}
+                    startIcon={<SaveIcon />}
+                    onClick={handleSaveButtonClick}
+                    disabled={saving}
+                >{isSaved ? "已保存" : "保存"}</Button>
+                {saving && <CircularProgress size={24} className={classes.buttonProgress} />}
+            </div>
         </Container>
     ) : (
         <div className={classes.placeholder}>
