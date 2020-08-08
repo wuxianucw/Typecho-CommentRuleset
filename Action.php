@@ -29,6 +29,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
         $this->on($this->request->is('a=ruleDetails'))->ruleDetails();
         $this->on($this->request->is('a=translate'))->translate();
         $this->on($this->request->is('a=saveRule'))->saveRule();
+        $this->on($this->request->is('a=removeRules'))->removeRules();
         $this->response->redirect($this->options->adminUrl);
     }
 
@@ -52,8 +53,18 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                 exit;
             }
             $ruleset = CommentRuleset_Plugin::getRuleset();
-            foreach ($ruleset as $rule) {
-                if ($ruid === $rule['ruid']) {
+            foreach ($ruleset as $_ruid => $rule) {
+                if ($ruid === $_ruid) {
+                    if ($rule['editMode'] == 0) {
+                        require_once __DIR__ . '/libs/RuleCompiler.php';
+                        try {
+                            $translator = new \CommentRuleset\JsonTranslator();
+                            (new \CommentRuleset\RuleCompiler())->parse($rule['ruleText'])->export($translator);
+                            $rule['ruleData'] = $translator->json;
+                        } catch (\CommentRuleset\Exception $e) {
+                            $rule['ruleData'] = null;
+                        }
+                    }
                     echo json_encode($rule);
                     exit;
                 }
@@ -86,7 +97,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
             }
             require_once __DIR__ . '/libs/RuleCompiler.php';
             try {
-                echo (new \CommentRuleset\RuleCompiler())->parse($input)->export(new \CommentRuleset\JsonTranslator());
+                (new \CommentRuleset\RuleCompiler())->parse($input)->export(new \CommentRuleset\JsonTranslator(), true);
             } catch (\CommentRuleset\Exception $e) {
                 $this->response->setStatus(201);
                 echo json_encode(array('result' => $e->getMessage()));
@@ -109,24 +120,27 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      * 返回状态码 `200` 格式 JSON 保存成功，包括自动调整后目前的状态以及可能的编译错误信息，还有整个规则列表  
      * 返回状态码 `201` 空文本 保存失败（未知原因）  
      * 返回状态码 `403` 空文本 参数非法
+     * 
+     * @access public
+     * @return void
      */
     public function saveRule() {
         if ($this->request->isPost()) {
             $this->response->setContentType('application/json');
-            $ruid = $this->request->get('ruid');
+            $ruid = $this->request->get('ruid', '');
             $name = $this->request->get('name');
-            $status = $this->request->get('status');
+            $status = $this->request->getArray('status');
             $remark = $this->request->get('remark', '');
             $priority = intval($this->request->get('priority'));
             $rule = $this->request->get('rule');
-            $editMode = $this->request->get('editMode', 0);
+            $editMode = intval($this->request->get('editMode', "0"));
             if (!$name || !$status || $priority < 1 || $priority > 99999 || !$rule) {
                 $this->response->setStatus(403);
                 exit;
             }
             $ruleset = CommentRuleset_Plugin::getRuleset();
-            if ($ruid) {
-                if (!in_array($ruid, array_keys($ruleset))) {
+            if ($ruid != '') {
+                if (!in_array($ruid, array_keys($ruleset)) || in_array('locked', $ruleset[$ruid]['status'])) {
                     $this->response->setStatus(403);
                     exit;
                 }
@@ -142,9 +156,11 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                 'remark' => $remark,
                 'priority' => $priority,
                 'editMode' => $editMode,
+                'ruleText' => $rule,
                 'filename' => '',
+                'compileMessage' => '',
             );
-            $return_json = array('code' => 200);
+            $return_json = array('code' => 200, 'ruid' => $ruid);
             if (in_array('on', $status) || !in_array('uncompiled', $status)) {
                 require_once __DIR__ . '/libs/RuleCompiler.php';
                 try {
@@ -157,17 +173,53 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                     $ruleset[$ruid]['filename'] = $filename;
                 } catch (\CommentRuleset\Exception $e) {
                     $return_json['code'] = 201;
-                    $return_json['message'] = $e->getMessage();
+                    $ruleset[$ruid]['compileMessage'] = $e->getMessage();
                     $ruleset[$ruid]['status'] = array('off', 'uncompiled');
                 }
             }
-            uasort($ruleset, function($a, $b) { return $a['priority'] - $b['priority']; });
-            if (!CommentRuleset_Plugin::saveRuleset($ruleset)) {
+            uasort($ruleset, function($a, $b) { return $b['priority'] - $a['priority']; });
+            if (!CommentRuleset_Plugin::saveRuleset($ruleset)) { // 写入长度不应该为 0
                 $this->response->setStatus(201);
                 exit;
             }
             $return_json['ruleset'] = $ruleset;
             echo json_encode($return_json);
+            exit;
+        }
+    }
+
+    /**
+     * 删除规则接口
+     * 
+     * GET 方式请求 `apiBase?a=removeRules`  
+     * GET 参数 `ruid` 欲删除规则的 RUID 数组  
+     * 返回状态码 `200` 格式 JSON 删除后的规则列表  
+     * 返回状态码 `403` 空文本 参数非法，指定规则不存在或被锁定  
+     * 返回状态码 `500` 空文本 配置更改写入失败
+     * 
+     * @access public
+     * @return void
+     */
+    public function removeRules() {
+        if ($this->request->isGet()) {
+            $this->response->setContentType('application/json');
+            $ruids = $this->request->getArray('ruid');
+            $ruleset = CommentRuleset_Plugin::getRuleset();
+            $ruleset_ruids = array_keys($ruleset);
+            foreach ($ruids as $ruid) {
+                if (!in_array($ruid, $ruleset_ruids) || in_array('locked', $ruleset[$ruid]['status'])) {
+                    $this->response->setStatus(403);
+                    exit;
+                }
+                if (!empty($ruleset[$ruid]['filename']) && file_exists(__DIR__ . '/runtime/' . $ruleset[$ruid]['filename']))
+                    unlink(__DIR__ . '/runtime/' . $ruleset[$ruid]['filename']);
+                unset($ruleset[$ruid]);
+            }
+            if (!CommentRuleset_Plugin::saveRuleset($ruleset)) { // 写入长度不应该为 0
+                $this->response->setStatus(500);
+                exit;
+            }
+            echo json_encode($ruleset);
             exit;
         }
     }
