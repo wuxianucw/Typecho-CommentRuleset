@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import clsx from 'clsx';
 import { lighten, makeStyles, useTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
@@ -28,6 +29,8 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 const headCells = [
     { id: 'name', numeric: false, disablePadding: true, label: '规则名称' },
@@ -143,18 +146,39 @@ const useStyles = makeStyles((theme) => ({
             verticalAlign: 'bottom',
         },
     },
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },
 }));
+
+function createData(name, ruid, remark, status, priority) {
+    return { name, ruid, remark, status, priority };
+}
+
+function transformRuleset(ruleset) {
+    if (typeof ruleset !== "object" || !ruleset) return [];
+    const rules = [];
+    for (let ruid in ruleset) {
+        const { name, remark, status, priority } = ruleset[ruid];
+        rules.push(createData(name, ruid, remark, status, priority));
+    }
+    return rules;
+}
 
 export default function OverviewPage(props) {
     const theme = useTheme();
     const classes = useStyles();
-    const { history, rows } = props;
+    const { history } = props;
+    const [rows, setRows] = React.useState(window.__pageData.rules);
     const [selected, setSelected] = React.useState([]);
     const [selectedLockedCount, setSelectedLockedCount] = React.useState(0);
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
     const [remarkDialogOpen, setRemarkDialogOpen] = React.useState(false);
     const [remarkDialogContent, setRemarkDialogContent] = React.useState("");
+    const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = React.useState(false);
+    const [backdropOpen, setBackdropOpen] = React.useState(false);
 
     const isLocked = (ruid) => {
         const search = rows.filter((row) => row.ruid === ruid);
@@ -251,8 +275,37 @@ export default function OverviewPage(props) {
     }
 
     const handleDeleteClick = () => {
-        console.log(selected);
-        alert("Not allowed.");
+        setConfirmDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDeleteDialogClose = () => {
+        setConfirmDeleteDialogOpen(false);
+    };
+
+    const source = React.useRef();
+    React.useEffect(() => (() => {
+        if (backdropOpen) source.current.cancel();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), []);
+
+    const handleConfirmDeleteDialogConfirmClick = () => {
+        setConfirmDeleteDialogOpen(false);
+        source.current = axios.CancelToken.source();
+        setBackdropOpen(true);
+        axios.get(window.__pageData.apiBase, {
+            params: {
+                a: "removeRules",
+                ruid: selected,
+            },
+            cancelToken: source.current.token,
+        }).then(({ data }) => {
+            setRows(transformRuleset(data));
+            setSelected([]);
+            setBackdropOpen(false);
+        }).catch((error) => {
+            console.error(error);
+            setBackdropOpen(false);
+        });
     };
 
     return (
@@ -312,15 +365,19 @@ export default function OverviewPage(props) {
                                             <TableCell align="right">{row.priority}</TableCell>
                                             <TableCell align="right" className={classes.disableVerticalPadding}>
                                                 <Tooltip title={isItemLocked ? "锁定状态下禁止编辑" : "编辑"}>
-                                                    <span><IconButton
-                                                        disabled={isItemLocked}
-                                                        onClick={() => handleEditClick(row.ruid)}
-                                                    ><EditIcon /></IconButton></span>
+                                                    <span style={{ display: "inline-block" }}>
+                                                        <IconButton
+                                                            disabled={isItemLocked}
+                                                            onClick={() => handleEditClick(row.ruid)}
+                                                        ><EditIcon /></IconButton>
+                                                    </span>
                                                 </Tooltip>
                                                 <Tooltip title={isItemLocked ? "解锁" : "锁定"}>
-                                                    <span><IconButton>
-                                                        {isItemLocked ? <LockOpenIcon /> : <LockOutlinedIcon />}
-                                                    </IconButton></span>
+                                                    <span style={{ display: "inline-block" }}>
+                                                        <IconButton>
+                                                            {isItemLocked ? <LockOpenIcon /> : <LockOutlinedIcon />}
+                                                        </IconButton>
+                                                    </span>
                                                 </Tooltip>
                                             </TableCell>
                                         </TableRow>
@@ -363,6 +420,28 @@ export default function OverviewPage(props) {
                     <Button onClick={handleRemarkDialogClose} color="primary" autoFocus>关闭</Button>
                 </DialogActions>
             </Dialog>
+            <Dialog
+                open={confirmDeleteDialogOpen}
+                onClose={handleConfirmDeleteDialogClose}
+            >
+                <DialogTitle>确定删除这些规则吗？</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        此操作不可逆，被删除的规则将无法恢复。
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleConfirmDeleteDialogConfirmClick} color="secondary">
+                        确定
+                    </Button>
+                    <Button onClick={handleConfirmDeleteDialogClose} color="primary" autoFocus>
+                        取消
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Backdrop className={classes.backdrop} open={backdropOpen}>
+                <CircularProgress color="inherit" />
+            </Backdrop>
         </div>
     );
 }
