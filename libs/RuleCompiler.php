@@ -706,10 +706,10 @@ class JsonTranslator extends Translator {
     /**
      * JSON 结构数组
      * 
-     * @access protected
+     * @access public
      * @var array
      */
-    protected $json;
+    public $json;
 
     /**
      * 编号计数器
