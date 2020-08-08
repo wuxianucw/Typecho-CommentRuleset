@@ -50,7 +50,6 @@ const useStyles = makeStyles((theme) => ({
 export default function App() {
     const classes = useStyles();
     const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
-    const [rules, setRules] = React.useState(window.__pageData.rules);
 
     const handleDrawerToggle = () => {
         setMobileDrawerOpen(!mobileDrawerOpen);
@@ -105,7 +104,7 @@ export default function App() {
                                     </Fade>
                                 </div>
                             }>
-                                <Route path="/overview" component={(props) => <OverviewPage rows={rules} {...props} />} />
+                                <Route path="/overview" component={OverviewPage} />
                                 <Route path="/edit/:ruid?" component={EditPage} />
                                 <Route path="/guide" component={GuidePage} />
                             </Suspense>
