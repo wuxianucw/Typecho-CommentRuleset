@@ -92,6 +92,7 @@ function OperatorSelect({ value, isNumeric, onChange, ...other }) {
         <Select
             value={value}
             onChange={onChange}
+            {...other}
         >
             <MenuItem value="==">等于（全字匹配）</MenuItem>
             <MenuItem value="!=">不等于（全字匹配）</MenuItem>
@@ -152,6 +153,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
     const classes = useStyles();
 
     const onChange = props.onChange ?? (() => {});
+    const onNetworkError = props.onNetworkError ?? (() => { alert("请求后端 API 失败！"); });
     const disabled = props.disabled ?? false;
     const [editMode, setEditMode] = React.useState(props.defaultEditMode ?? 0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
     const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
@@ -182,6 +184,21 @@ const RuleEditor = React.forwardRef((props, ref) => {
 
     React.useImperativeHandle(ref, () => ({
         editMode: editMode,
+        sync: () => {
+            (props.defaultEditMode !== undefined) && setEditMode(props.defaultEditMode);
+            (props.defaultRuleData !== undefined) && setRuleStructure(translateData(props.defaultRuleData));
+            (props.defaultRuleText !== undefined) && setRuleText(props.defaultRuleText);
+        },
+        validate: () => {
+            if (editMode === 0) {
+                for (let [, name, , value] of ruleStructure) {
+                    if (["uid", "length"].indexOf(name) !== -1) {
+                        if (!/^\d+$/.test(value)) return false;
+                    }
+                }
+            }
+            return true;
+        },
         getRuleText: () => (editMode === 0 ? structure2Rule() : ruleText),
     }));
 
@@ -237,7 +254,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                 }).catch((error) => {
                     if (!axios.isCancel(error)) {
                         console.error(error);
-                        alert("请求后端 API 失败！");
+                        onNetworkError(error);
                     }
                     setBackdropOpen(false);
                 });
