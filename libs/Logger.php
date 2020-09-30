@@ -68,7 +68,7 @@ class Logger {
      */
     public function verbose($text) {
         if ($this->level > self::VERBOSE) return;
-        fprintf($this->file, "[%s][V] %s\n", array(date('Y-m-d H:i:s'), $text));
+        fprintf($this->file, "[%s][V] %s\n", date('Y-m-d H:i:s'), $text);
     }
 
     /**
@@ -80,7 +80,7 @@ class Logger {
      */
     public function debug($text) {
         if ($this->level > self::DEBUG) return;
-        fprintf($this->file, "[%s][D] %s\n", array(date('Y-m-d H:i:s'), $text));
+        fprintf($this->file, "[%s][D] %s\n", date('Y-m-d H:i:s'), $text);
     }
 
     /**
@@ -92,7 +92,7 @@ class Logger {
      */
     public function info($text) {
         if ($this->level > self::INFO) return;
-        fprintf($this->file, "[%s][I] %s\n", array(date('Y-m-d H:i:s'), $text));
+        fprintf($this->file, "[%s][I] %s\n", date('Y-m-d H:i:s'), $text);
     }
 
     /**
@@ -104,7 +104,7 @@ class Logger {
      */
     public function warning($text) {
         if ($this->level > self::WARNING) return;
-        fprintf($this->file, "[%s][W] %s\n", array(date('Y-m-d H:i:s'), $text));
+        fprintf($this->file, "[%s][W] %s\n", date('Y-m-d H:i:s'), $text);
     }
 
     /**
@@ -116,7 +116,7 @@ class Logger {
      */
     public function error($text) {
         if ($this->level > self::ERROR) return;
-        fprintf($this->file, "[%s][E] %s\n", array(date('Y-m-d H:i:s'), $text));
+        fprintf($this->file, "[%s][E] %s\n", date('Y-m-d H:i:s'), $text);
     }
 }
 
