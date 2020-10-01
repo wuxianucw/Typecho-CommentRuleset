@@ -30,6 +30,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
         $this->on($this->request->is('a=translate'))->translate();
         $this->on($this->request->is('a=saveRule'))->saveRule();
         $this->on($this->request->is('a=removeRules'))->removeRules();
+        $this->on($this->request->is('a=lockRule'))->lockRule();
         $this->response->redirect($this->options->adminUrl);
     }
 
@@ -220,6 +221,48 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                 exit;
             }
             echo json_encode($ruleset);
+            exit;
+        }
+    }
+
+    /**
+     * 锁定/解锁规则接口
+     * 
+     * GET 方式请求 `apiBase?a=lockRule`  
+     * GET 参数 `ruid` 规则 RUID  
+     * GET 参数 `opt` 操作类型，1 为锁定，0 为解锁  
+     * 返回状态码 `200` 空文本 操作成功  
+     * 返回状态码 `403` 空文本 参数非法，指定规则不存在  
+     * 返回状态码 `500` 空文本 配置更改写入失败
+     * 
+     * @access public
+     * @return void
+     */
+    public function lockRule() {
+        if ($this->request->isGet()) {
+            $this->response->setContentType('application/json');
+            $ruid = $this->request->get('ruid');
+            $opt = $this->request->get('opt');
+            if (!$ruid || !is_numeric($opt)) {
+                $this->response->setStatus(403);
+                exit;
+            }
+            $opt = intval($opt);
+            if ($opt < 0 || $opt > 1) {
+                $this->response->setStatus(403);
+                exit;
+            }
+            $ruleset = CommentRuleset_Plugin::getRuleset();
+            if (!in_array($ruid, array_keys($ruleset))) {
+                $this->response->setStatus(403);
+                exit;
+            }
+            $ruleset[$ruid]['status'] = array_diff($ruleset[$ruid]['status'], array('locked'));
+            if ($opt) $ruleset[$ruid]['status'][] = 'locked';
+            if (!CommentRuleset_Plugin::saveRuleset($ruleset)) { // 写入长度不应该为 0
+                $this->response->setStatus(500);
+                exit;
+            }
             exit;
         }
     }
