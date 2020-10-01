@@ -181,6 +181,7 @@ export default function OverviewPage(props) {
     const [lockType, setLockType] = React.useState(['', true]);
     const [confirmLockDialogOpen, setConfirmLockDialogOpen] = React.useState(false);
     const [backdropOpen, setBackdropOpen] = React.useState(false);
+    const [networkErrorDialogOpen, setNetworkErrorDialogOpen] = React.useState(false);
 
     const isLocked = (ruid) => {
         const search = rows.filter((row) => row.ruid === ruid);
@@ -305,7 +306,10 @@ export default function OverviewPage(props) {
             setSelected([]);
             setBackdropOpen(false);
         }).catch((error) => {
-            console.error(error);
+            if (!axios.isCancel(error)) {
+                console.error(error);
+                setNetworkErrorDialogOpen(true);
+            }
             setBackdropOpen(false);
         });
     };
@@ -341,9 +345,16 @@ export default function OverviewPage(props) {
             });
             setBackdropOpen(false);
         }).catch((error) => {
-            console.error(error);
+            if (!axios.isCancel(error)) {
+                console.error(error);
+                setNetworkErrorDialogOpen(true);
+            }
             setBackdropOpen(false);
         });
+    };
+
+    const handleNetworkErrorDialogClose = () => {
+        setNetworkErrorDialogOpen(false);
     };
 
     // 调试用代码
@@ -364,7 +375,10 @@ export default function OverviewPage(props) {
                 setSelected([]);
                 setBackdropOpen(false);
             }).catch((error) => {
-                console.error(error);
+                if (!axios.isCancel(error)) {
+                    console.error(error);
+                    setNetworkErrorDialogOpen(true);
+                }
                 setBackdropOpen(false);
             });
         };
@@ -524,6 +538,20 @@ export default function OverviewPage(props) {
             <Backdrop className={classes.backdrop} open={backdropOpen}>
                 <CircularProgress color="inherit" />
             </Backdrop>
+            <Dialog
+                open={networkErrorDialogOpen}
+                onClose={handleNetworkErrorDialogClose}
+            >
+                <DialogTitle>请求后端 API 失败！</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>可能是网络错误或后端处理失败，请打开开发人员工具查看详细信息。</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleNetworkErrorDialogClose} color="primary" autoFocus>
+                        确定
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 }
