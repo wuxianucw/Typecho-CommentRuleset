@@ -178,6 +178,8 @@ export default function OverviewPage(props) {
     const [remarkDialogOpen, setRemarkDialogOpen] = React.useState(false);
     const [remarkDialogContent, setRemarkDialogContent] = React.useState("");
     const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = React.useState(false);
+    const [lockType, setLockType] = React.useState(['', true]);
+    const [confirmLockDialogOpen, setConfirmLockDialogOpen] = React.useState(false);
     const [backdropOpen, setBackdropOpen] = React.useState(false);
 
     const isLocked = (ruid) => {
@@ -308,6 +310,66 @@ export default function OverviewPage(props) {
         });
     };
 
+    const handleLockClick = (ruid, isLocked) => {
+        setLockType([ruid, !isLocked]);
+        setConfirmLockDialogOpen(true);
+    };
+
+    const handleConfirmLockDialogClose = () => {
+        setConfirmLockDialogOpen(false);
+    };
+
+    const handleConfirmLockDialogConfirmClick = () => {
+        setConfirmLockDialogOpen(false);
+        source.current = axios.CancelToken.source();
+        setBackdropOpen(true);
+        axios.get(window.__pageData.apiBase, {
+            params: {
+                a: "lockRule",
+                ruid: lockType[0],
+                opt: lockType[1] ? 1 : 0,
+            },
+            cancelToken: source.current.token,
+        }).then(() => {
+            setRows((rows) => {
+                const newValue = rows;
+                ((status) => {
+                    if (lockType[1]) status.push("locked");
+                    else status.splice(status.findIndex((i) => i === "locked"), 1);
+                })(newValue.find((row) => row.ruid === lockType[0]).status);
+                return newValue;
+            });
+            setBackdropOpen(false);
+        }).catch((error) => {
+            console.error(error);
+            setBackdropOpen(false);
+        });
+    };
+
+    // 调试用代码
+    if (!window.loadRules) {
+        console.warn("请移除 window.loadRules 调试代码");
+        window.loadRules = () => {
+            console.warn("当你还在调用 window.loadRules 时，你应该反思一下你是不是有什么问题");
+            source.current = axios.CancelToken.source();
+            setBackdropOpen(true);
+            axios.get(window.__pageData.apiBase, {
+                params: {
+                    a: "removeRules",
+                    ruid: [],
+                },
+                cancelToken: source.current.token,
+            }).then(({ data }) => {
+                setRows(transformRuleset(data));
+                setSelected([]);
+                setBackdropOpen(false);
+            }).catch((error) => {
+                console.error(error);
+                setBackdropOpen(false);
+            });
+        };
+    }
+
     return (
         <div className={classes.root}>
             <Paper className={classes.paper}>
@@ -374,7 +436,7 @@ export default function OverviewPage(props) {
                                                 </Tooltip>
                                                 <Tooltip title={isItemLocked ? "解锁" : "锁定"}>
                                                     <span style={{ display: "inline-block" }}>
-                                                        <IconButton>
+                                                        <IconButton onClick={() => handleLockClick(row.ruid, isItemLocked)}>
                                                             {isItemLocked ? <LockOpenIcon /> : <LockOutlinedIcon />}
                                                         </IconButton>
                                                     </span>
@@ -435,6 +497,26 @@ export default function OverviewPage(props) {
                         确定
                     </Button>
                     <Button onClick={handleConfirmDeleteDialogClose} color="primary" autoFocus>
+                        取消
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={confirmLockDialogOpen}
+                onClose={handleConfirmLockDialogClose}
+            >
+                <DialogTitle>确定{lockType[1] ? "锁定" : "解锁"}这条规则吗？</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {lockType[1] ? "规则被锁定后，除非手动解锁，否则将无法被编辑。这能够有效降低误操作的可能性。"
+                            : "规则被解锁后，将可以直接被编辑。这可能会增加误操作的风险。"}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleConfirmLockDialogConfirmClick} color="secondary">
+                        确定
+                    </Button>
+                    <Button onClick={handleConfirmLockDialogClose} color="primary" autoFocus>
                         取消
                     </Button>
                 </DialogActions>
