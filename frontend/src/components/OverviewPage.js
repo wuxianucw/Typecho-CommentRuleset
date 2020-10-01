@@ -183,6 +183,10 @@ export default function OverviewPage(props) {
     const [backdropOpen, setBackdropOpen] = React.useState(false);
     const [networkErrorDialogOpen, setNetworkErrorDialogOpen] = React.useState(false);
 
+    React.useEffect(() => (() => {
+        window.__pageData.rules = rows;
+    }), [rows])
+
     const isLocked = (ruid) => {
         const search = rows.filter((row) => row.ruid === ruid);
         if (search.length < 1) return false;
