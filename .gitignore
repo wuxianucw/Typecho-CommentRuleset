@@ -16,6 +16,8 @@ frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
 
+tools/build
+
 /.vscode
 /runtime
 [Tt]humbs.db
