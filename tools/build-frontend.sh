@@ -48,6 +48,6 @@ info "processing files..."
 cd ../tools/build/
 mv index.html control-panel.php
 cd ..
-php index-decorator.php
-[[ $? -ne 0 ]] && error "failed to run \"php index-decorator.php\"."
+php file-processor.php
+[[ $? -ne 0 ]] && error "failed to run \"php file-processor.php\"."
 info "done."

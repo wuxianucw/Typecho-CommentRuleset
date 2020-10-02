@@ -3,16 +3,16 @@ function error($message) {
     echo $message . "\n";
     exit(1);
 }
-define('__INPUT__', __DIR__ . '/build/control-panel.php');
-if (!file_exists(__INPUT__)) error('No input file found.');
-$content = file_get_contents(__INPUT__);
+$input = __DIR__ . '/build/control-panel.php';
+if (!file_exists($input)) error('No input file found.');
+$content = file_get_contents($input);
 $content = '<?php if (!defined(\'__TYPECHO_ADMIN__\')) exit;
 require_once __DIR__ . \'/libs/MenuOutputer.php\';
 Typecho_Widget::widget(\'CommentRuleset_MenuOutputer\')->to($menuOutputer);
 $ruleset = CommentRuleset_Plugin::getRuleset(); ?>' . $content;
 $content = preg_replace('/\\<title>.*\\<\\/title>/',
     '<title><?php _e(\'%s - %s - Powered by Typecho\', $menu->title, $options->title); ?></title>', $content, 1);
-$content = preg_replace_callback('/\\<script>function createData.+window\\.__pageData.+\\<\\/script>/', function() {
+$content = preg_replace_callback('/\\<script>function createData.+window\\.__pageData.+?\\<\\/script>/', function() {
     $result = '<script>window.__pageData=<?php ';
     $result .= trim(<<<'DATA'
 if ($user->logged > 0) {
@@ -21,6 +21,7 @@ if ($user->logged > 0) {
 } else $logged = $user->screenName;
 $pageData = array(
     'apiBase' => $options->index . '/action/manage-commentruleset',
+    'sourceBase' => $options->rootUrl . '/usr/plugins/CommentRuleset/',
     'title' => $menu->title,
     'account' => array($logged, $options->adminUrl . 'profile.php', $options->logoutUrl),
     'menu' => $menuOutputer->output(),
@@ -41,4 +42,11 @@ DATA
     return $result;
 }, $content, 1);
 $content = str_replace('./static/', '<?php $options->rootUrl(); ?>/usr/plugins/CommentRuleset/static/', $content);
-file_put_contents(__INPUT__, $content);
+$content = str_replace('"./"', 'window.__pageData.sourceBase', $content);
+file_put_contents($input, $content);
+$input = glob(__DIR__ . '/build/static/js/runtime-main.*.js');
+if (!$input) error('runtime-main.*.js is not found.');
+$input = $input[0];
+$content = file_get_contents($input);
+$content = str_replace('"./"', 'window.__pageData.sourceBase', $content);
+file_put_contents($input, $content);

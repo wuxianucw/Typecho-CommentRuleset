@@ -237,19 +237,19 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
      * @return string
      */
     public function output() {
-        return array_filter(array_map(function($key, $node) {
+        return array_values(array_filter(array_map(function($key, $node) {
             if (!$node[1] || !$key) return;
             return array(
                 'title' => $node[0],
                 'open' => $key == $this->_currentParent,
-                'children' => array_filter(array_map(function($inKey, $inNode) use ($key) {
+                'children' => array_values(array_filter(array_map(function($inKey, $inNode) use ($key) {
                     if ($inNode[4]) return;
                     if ($key == $this->_currentParent && $inKey == $this->_currentChild) {
                         return array($inNode[0], true);
                     } elseif ($inNode[6]) return;
                     return array($inNode[0], $inNode[2]);
-                }, array_keys($node[3]), $node[3])),
+                }, array_keys($node[3]), $node[3]))),
             );
-        }, array_keys($this->_menu), $this->_menu));
+        }, array_keys($this->_menu), $this->_menu)));
     }
 }
