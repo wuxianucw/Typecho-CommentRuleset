@@ -3,7 +3,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * Typecho 评论规则集插件 后台菜单输出器
  * 参考：Widget_Menu
- * 由于原组件封装程度过高，对自定义 HTML 结构的支持性几乎没有，被迫制作一个适配后的副本
+ * 由于原组件封装程度过高，对自定义的支持性几乎没有，被迫制作一个适配后的副本
  * 
  * @package CommentRuleset
  * @license GNU General Public License v2.0
@@ -94,10 +94,10 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
     public function execute() {
         $parentNodes = array(
             NULL,
-            array(_t('控制台'), 'explore', 'blue'),
-            array(_t('撰写'), 'border_color', 'orange'),
-            array(_t('管理'), 'widgets', 'purple'),
-            array(_t('设置'), 'settings', 'black')
+            _t('控制台'),
+            _t('撰写'),
+            _t('管理'),
+            _t('设置')
         );
         $childNodes =  array(
             array(),
@@ -236,45 +236,20 @@ class CommentRuleset_MenuOutputer extends Typecho_Widget {
      * @access public
      * @return string
      */
-    public function output($class = 'mdui-collapse-item-open', $childClass = 'mdui-list-item-active') {
-        foreach ($this->_menu as $key => $node) {
-            if (!$node[1] || !$key) continue;
-            if (is_array($node[0])) {
-                $title = isset($node[0][0]) ? $node[0][0] : '';
-                $icon = isset($node[0][1]) ? $node[0][1] : '';
-                $color = isset($node[0][2]) ? $node[0][2] : 'black';
-            } else {
-                $title = $node[0];
-                $icon = '';
-                $color = 'black';
-            }
-            echo '                ';
-            echo '<div class="mdui-collapse-item' . ($key == $this->_currentParent ? ' ' . $class : NULL) . <<<HTML
-">
-                    <div class="mdui-collapse-item-header mdui-list-item mdui-ripple">
-                        <i class="mdui-list-item-icon mdui-icon material-icons mdui-text-color-{$color}">{$icon}</i>
-                        <div class="mdui-list-item-content">{$title}</div>
-                        <i class="mdui-collapse-item-arrow mdui-icon material-icons">keyboard_arrow_down</i>
-                    </div>
-                    <div class="mdui-collapse-item-body mdui-list">\n
-HTML;
-            $last = 0;
-            foreach ($node[3] as $inKey => $inNode) {
-                if (!$inNode[4]) $last = $inKey;
-            }
-            foreach ($node[3] as $inKey => $inNode) {
-                if ($inNode[4]) continue;
-                $classes = array('mdui-list-item', 'mdui-ripple');
-                if ($key == $this->_currentParent && $inKey == $this->_currentChild) {
-                    $classes[] = $childClass;
-                } elseif ($inNode[6]) continue;
-                echo "                        ";
-                echo '<a class="' . implode(' ', $classes) . '" href="' . ($key == $this->_currentParent && $inKey == $this->_currentChild ? $this->_currentUrl : $inNode[2]) . "\">{$inNode[0]}</a>\n";
-            }
-            echo <<<HTML
-                    </div>
-                </div>\n
-HTML;
-        }
+    public function output() {
+        return array_filter(array_map(function($key, $node) {
+            if (!$node[1] || !$key) return;
+            return array(
+                'title' => $node[0],
+                'open' => $key == $this->_currentParent,
+                'children' => array_filter(array_map(function($inKey, $inNode) use ($key) {
+                    if ($inNode[4]) return;
+                    if ($key == $this->_currentParent && $inKey == $this->_currentChild) {
+                        return array($inNode[0], true);
+                    } elseif ($inNode[6]) return;
+                    return array($inNode[0], $inNode[2]);
+                }, array_keys($node[3]), $node[3])),
+            );
+        }, array_keys($this->_menu), $this->_menu));
     }
 }
