@@ -212,7 +212,12 @@ const RuleEditor = React.forwardRef((props, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [editMode, ruleStructure, ruleText]);
 
+    const failingStatus = React.useRef(false);
     const handleSwitchMode = () => {
+        if (failingStatus.current && editMode === 1) {
+            setEditMode(0);
+            return;
+        }
         setConfirmDialogOpen(true);
     };
 
@@ -231,7 +236,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
         setEditMode((mode) => {
             if (mode === 0) setRuleText(structure2Rule());
             else {
-                if (ruleText.trim() === "") return 0;
+                if (!ruleText || ruleText.trim() === "") return 0;
                 source.current = axios.CancelToken.source();
                 setBackdropOpen(true);
                 axios.post(window.__pageData.apiBase, qs.stringify({
@@ -335,7 +340,17 @@ const RuleEditor = React.forwardRef((props, ref) => {
         setRuleText(newText);
     };
 
+    const handleMonacoInitError = (error, handler) => {
+        console.error('Monaco initialization error:', error);
+        if (handler.times <= 3) handler.retry();
+        else {
+            failingStatus.current = true;
+            handler.setFailing(true);
+        }
+    };
+
     const editorWillMount = (monaco) => {
+        failingStatus.current = false;
         if (!monaco.languages.getLanguages().some(({ id }) => (id === "rule"))) {
             monaco.languages.register({ id: "rule" });
             monaco.languages.setMonarchTokensProvider("rule", languageDef);
@@ -468,7 +483,9 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     language="rule"
                     theme="vs-dark"
                     value={ruleText}
+                    failing="编辑器加载失败，请刷新重试。如果规则尚未保存，请尝试切换至所见即所得编辑模式保存以避免数据丢失；如果规则已保存，请直接刷新重试，切换模式将导致数据丢失。"
                     onChange={handleEditorChange}
+                    onInitError={handleMonacoInitError}
                     editorWillMount={editorWillMount}
                     options={{ readOnly: disabled, ...monacoOptions }}
                 />
