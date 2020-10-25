@@ -204,14 +204,14 @@ export default function EditPage(props) {
                 a: "saveRule",
             },
             cancelToken: source.current.token,
-        }).then(({ data: { code, ruid, ruleset }, status }) => {
+        }).then(({ data: { code, ruid: _ruid, ruleset }, status }) => {
             if (status === 200) {
                 if (!ruid) {
-                    setRUID(ruid);
-                    history.push("/edit/" + ruid);
+                    setRUID(_ruid);
+                    history.push("/edit/" + _ruid);
                 }
                 window.__pageData.rules = transformRuleset(ruleset);
-                const { status, compileMessage } = ruleset[ruid];
+                const { status, compileMessage } = ruleset[_ruid];
                 setStatus(status);
                 setCompileMessage(compileMessage);
                 setIsSaved(true);
