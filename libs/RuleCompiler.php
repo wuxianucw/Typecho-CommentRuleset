@@ -274,8 +274,19 @@ class ASTNode {
      */
     public $parent;
 
+    /**
+     * 标志量
+     * 
+     * 仅在 Judge 中起作用
+     * 
+     * @access public
+     * @var int|null
+     */
+    public $pos;
+
     public function __construct() {
         $this->parent = null;
+        $this->pos = null;
     }
 }
 
@@ -290,14 +301,6 @@ class Root extends ASTNode {
      * @var \CommentRuleset\Judge
      */
     public $judge;
-
-    /**
-     * 标志量
-     * 
-     * @access public
-     * @var int
-     */
-    public $pos;
 
     public function __construct() {
         parent::__construct();

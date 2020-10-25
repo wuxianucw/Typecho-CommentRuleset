@@ -24,6 +24,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      * @return void
      */
     public function action() {
+        error_reporting(E_ALL);
         //Typecho_Widget::widget('Widget_User')->pass('administrator');
         Helper::options()->to($this->options);
         $this->on($this->request->is('a=ruleDetails'))->ruleDetails();
