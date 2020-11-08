@@ -266,7 +266,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
             }
             return 1;
         });
-    }
+    };
 
     const handleCompileErrorDialogClose = () => {
         setCompileErrorDialogOpen(false);

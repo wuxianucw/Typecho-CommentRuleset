@@ -185,7 +185,7 @@ export default function OverviewPage(props) {
 
     React.useEffect(() => (() => {
         window.__pageData.rules = rows;
-    }), [rows])
+    }), [rows]);
 
     const isLocked = (ruid) => {
         const search = rows.filter((row) => row.ruid === ruid);
@@ -279,7 +279,7 @@ export default function OverviewPage(props) {
 
     const handleEditClick = (ruid) => {
         history.push("/edit/" + ruid);
-    }
+    };
 
     const handleDeleteClick = () => {
         setConfirmDeleteDialogOpen(true);

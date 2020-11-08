@@ -27,7 +27,7 @@ export const languageDef = {
     symbols: /[=><!~-]+/,
 
     regexpctl: /[(){}[\]$^|\-*+?.]/,
-    regexpesc: /\\(?:[bBdDfnrstvwWn0\\/]|@regexpctl|c[A-Z]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/,
+    regexpesc: /\\(?:[bBdDfrstvwWn0\\/]|@regexpctl|c[A-Z]|x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4})/,
 
     // The main tokenizer for rule
     tokenizer: {
