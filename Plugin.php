@@ -15,35 +15,35 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      * 
      * @var int
      */
-    const FLAG_ACCEPT = 0;
+    const FLAG_ACCEPT = 0x00;
     
     /**
      * 评论待审核标志
      * 
      * @var int
      */
-    const FLAG_REVIEW = 1;
+    const FLAG_REVIEW = 0x0c;
 
     /**
      * 评论垃圾标志
      * 
      * @var int
      */
-    const FLAG_SPAM = 2;
+    const FLAG_SPAM = 0x0d;
 
     /**
      * 评论禁止标志
      * 
      * @var int
      */
-    const FLAG_DENY = 3;
+    const FLAG_DENY = 0x0b;
 
     /**
      * 无操作标志
      * 
      * @var int
      */
-    const FLAG_SKIP = 4;
+    const FLAG_SKIP = 0x01;
 
     /**
      * 激活插件
@@ -170,5 +170,23 @@ HTML
     public static function render($comment, $content) {
         // touch(dirname(__FILE__) . '/FLAG'); // 临时：帮助我们更好地了解触发规律
         return $comment;
+    }
+
+    /**
+     * 用指定规则检测评论
+     * 
+     * @access protected
+     * @param string $rule_filename
+     * @param array $params
+     * @return int
+     */
+    protected static function testComment($rule_filename, $params) {
+        // $params 将在规则文件中被使用
+        $result = include __DIR__ . '/runtime/' . $rule_filename;
+        if ($result === false) {
+            $result = self::FLAG_SKIP;
+            throw new Exception('CommentRuleset: include failed.');
+        }
+        return $result;
     }
 }
