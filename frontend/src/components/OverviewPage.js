@@ -208,7 +208,7 @@ export default function OverviewPage(props) {
         setSelected([]);
     };
 
-    const handleClick = (_, ruid) => {
+    const handleClick = (ruid) => {
         const selectedIndex = selected.indexOf(ruid);
         const isItemLocked = isLocked(ruid);
         let newSelected = [];
@@ -424,7 +424,7 @@ export default function OverviewPage(props) {
                                         >
                                             <TableCell padding="checkbox">
                                                 <Checkbox
-                                                    onClick={(event) => handleClick(event, row.ruid)}
+                                                    onClick={() => handleClick(row.ruid)}
                                                     checked={isItemSelected}
                                                 />
                                             </TableCell>
