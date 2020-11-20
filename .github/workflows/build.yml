@@ -1,0 +1,44 @@
+# Build：用于自动构建插件本体，包括编译 JavaScript、处理文件并打包结果
+
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v2.1.2
+
+      - name: Setup PHP environment
+        uses: shivammathur/setup-php@2.8.0
+        with:
+          php-version: 7.2
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Build
+        run: |
+          cd tools
+          ./build-frontend.sh
+          cd ..
+          cp Plugin.php tools/build
+          cp Action.php tools/build
+          cp LICENSE tools/build
+          cp README.md tools/build
+          cp -r libs tools/build
+
+      - name: Upload
+        uses: actions/upload-artifact@v2.2.1
+        with:
+          name: CommentRuleset
+          path: tools/build
+          retention-days: 30
