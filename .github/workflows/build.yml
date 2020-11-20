@@ -28,6 +28,7 @@ jobs:
       - name: Build
         run: |
           cd tools
+          chmod +x build-frontend.sh
           ./build-frontend.sh
           cd ..
           cp Plugin.php tools/build
