@@ -1,4 +1,5 @@
 import React from 'react';
+import { Prompt } from 'react-router-dom';
 import axios from 'axios';
 import qs from 'qs';
 import Fade from '@material-ui/core/Fade';
@@ -248,11 +249,20 @@ export default function EditPage(props) {
     const handleDialogClose = () => {
         setDialog(([, ...oldValue]) => {
             return [false, ...oldValue];
-        })
+        });
     };
+
+    React.useEffect(() => {
+        window.onbeforeunload = isSaved ? undefined : () => true;
+        return () => window.onbeforeunload = undefined;
+    }, [isSaved]);
 
     return initialState ? (
         <Container>
+            <Prompt
+                when={!isSaved}
+                message="规则尚未保存，确定要离开吗？"
+            />
             <FormGroup row>
                 <TextField
                     value={name}
