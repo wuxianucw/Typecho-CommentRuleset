@@ -21,3 +21,5 @@ tools/build
 /.vscode
 /runtime
 [Tt]humbs.db
+/static
+control-panel.php

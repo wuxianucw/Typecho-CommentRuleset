@@ -53,8 +53,10 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      * @throws Typecho_Plugin_Exception
      */
     public static function activate() {
-        if (!is_dir(dirname(__FILE__) . '/runtime')) mkdir(dirname(__FILE__) . '/runtime');
-        if (!file_exists(dirname(__FILE__) . '/runtime/ruleset.php')) touch(dirname(__FILE__) . '/runtime/ruleset.php');
+        if (!file_exists(__DIR__ . '/control-panel.php'))
+            throw new Typecho_Plugin_Exception('插件文件不完整，请检查插件完整性');
+        if (!is_dir(__DIR__ . '/runtime')) mkdir(__DIR__ . '/runtime');
+        if (!file_exists(__DIR__ . '/runtime/ruleset.php')) touch(__DIR__ . '/runtime/ruleset.php');
         Typecho_Plugin::factory('Widget_Feedback')->comment = array('CommentRuleset_Plugin', 'render');
         Helper::addPanel(1, 'CommentRuleset/control-panel.php', '评论规则集', '评论规则集管理', 'administrator');
         Helper::addAction('manage-commentruleset', 'CommentRuleset_Action');
@@ -107,6 +109,7 @@ HTML
     /**
      * 获取 MDUI 加载来源 结尾不含 "/"
      * 
+     * @deprecated
      * @access public
      * @param bool $output
      * @return string
@@ -139,7 +142,7 @@ HTML
      * @return array
      */
     public static function getRuleset() {
-        require dirname(__FILE__) . '/runtime/ruleset.php';
+        require __DIR__ . '/runtime/ruleset.php';
         if (!isset($ruleset)) return array();
         $ruleset = unserialize($ruleset);
         if (!is_array($ruleset)) return array();
@@ -154,7 +157,7 @@ HTML
      * @return int|false
      */
     public static function saveRuleset($ruleset) {
-        return file_put_contents(dirname(__FILE__) . '/runtime/ruleset.php',
+        return file_put_contents(__DIR__ . '/runtime/ruleset.php',
             "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
             . str_replace(array('\\', '\''), array('\\\\', '\\\''), serialize($ruleset)) . "';\n");
     }
@@ -168,7 +171,7 @@ HTML
      * @return array
      */
     public static function render($comment, $content) {
-        // touch(dirname(__FILE__) . '/FLAG'); // 临时：帮助我们更好地了解触发规律
+        // touch(__DIR__ . '/FLAG'); // 临时：帮助我们更好地了解触发规律
         return $comment;
     }
 
