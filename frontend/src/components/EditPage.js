@@ -167,6 +167,8 @@ export default function EditPage(props) {
         setDialog([true, "请求后端 API 失败！", "可能是网络错误或后端处理失败，请打开开发人员工具查看详细信息。", "确定"]);
     };
 
+    const updatingRUID = React.useRef("");
+
     const handleSaveButtonClick = () => {
         if (isSaved || saving) return;
 
@@ -209,16 +211,16 @@ export default function EditPage(props) {
             if (status === 200) {
                 if (!ruid) {
                     setRUID(_ruid);
-                    history.push("/edit/" + _ruid);
+                    updatingRUID.current = _ruid;
                 }
                 window.__pageData.rules = transformRuleset(ruleset);
                 const { status, compileMessage } = ruleset[_ruid];
                 setStatus(status);
                 setCompileMessage(compileMessage);
-                setIsSaved(true);
                 if (code === 201) {
                     setAdjusted(true);
                 }
+                setIsSaved(true);
             } else if (status === 201) {
                 setDialog([true, "后端 API 返回错误！",
                     "保存规则时遇到了未知错误，请检查插件目录权限，必要时请移步 <a href='https://github.com/wuxianucw/Typecho-CommentRuleset/issues' target='_blank'>GitHub issues</a>。",
@@ -233,6 +235,14 @@ export default function EditPage(props) {
             setSaving(false);
         });
     };
+
+    React.useEffect(() => {
+        if (isSaved && updatingRUID.current !== "") {
+            history.push("/edit/" + updatingRUID.current);
+            updatingRUID.current = "";
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSaved]);
 
     const handleIsCompiledChange = (event) => {
         const { checked } = event.target;
