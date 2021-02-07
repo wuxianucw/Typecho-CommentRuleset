@@ -49,7 +49,7 @@ export default function GuidePage() {
                 <p><code>static</code> 目录用于存放本地资源文件，包括必要的样式表、Roboto 字体和编译后的 JavaScript 文件，其中主要代码（与插件页面逻辑相关的自有代码）以 <Link href="https://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank" rel="noopener noreferrer">GNU Affero General Public License v3.0</Link> 进行许可，部分依赖库的许可协议见目录下 <code>*.LICENSE.txt</code>。</p>
                 <p>下面重点介绍 <code>runtime</code> 目录中的文件组成。</p>
                 <p>全新安装的插件在启用前并不存在 <code>runtime</code> 目录，启用插件时，插件将会自动创建这个目录以及目录下的 <code>ruleset.php</code> 规则集索引文件。规则集索引文件用于保存当前情况下的整个规则列表。</p>
-                <p>编译规则后，目录下会生成相应的 <code>rule_<Tooltip title="RUID"><span style={{ padding: '2px',backgroundColor: '#e8eaf6' }}>xxxxxx</span></Tooltip>.php</code>；如果存在生效的规则，还会生成 <code>rules.php</code>，用于运行时的快速判断。</p>
+                <p>编译规则后，目录下会生成相应的 <code>rule_<Tooltip title="RUID"><span style={{ padding: '2px',backgroundColor: '#e8eaf6' }}>xxxxxx</span></Tooltip>.php</code>。</p>
                 <p>这里第一次出现了 RUID 的概念，它的全称是 Rule Unique ID，即规则唯一标识符，是一个字母全部小写的 6 位十六进制数，采用随机的方法生成，用于标识规则。</p>
                 <p><strong>再次强调：绝对不要手动修改或删除 <code>runtime</code> 目录下的任何文件！这样做的后果很可能是灾难性的！</strong></p>
                 <Divider />
