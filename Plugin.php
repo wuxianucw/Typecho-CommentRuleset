@@ -87,11 +87,9 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
     public static function config(Typecho_Widget_Helper_Form $form)
     {
         $panelUrl = Helper::url('CommentRuleset/control-panel.php');
-        /** MDUI 加载来源 */
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Select('mdui', array(0 => '本地', 1 => 'jsDelivr'), 0, 'MDUI 加载来源', _t(<<<HTML
-            本参数用于设置评论规则集管理页面使用到的 MDUI 相关资源的加载来源，目前提供本地源和 jsDelivr 两个选项。<br>
-            如果评论规则集页面加载缓慢，可以尝试更改此项目。<br>
-            如果您不知道此项目的用途，保持默认即可。（反正也不影响规则集配置）<br>
+        /** 拒绝评论错误提示 */
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text('errmsg', NULL, '根据相关设置，该评论被拒绝。', '拒绝评论错误提示', _t(<<<HTML
+            本参数用于设置拒绝评论时的提示信息，该信息是否展示取决于您当前使用的模板。<br>
             如果您希望配置评论规则集，请移步<a href="{$panelUrl}" target="_blank">「控制台 -> 评论规则集」</a>。
 HTML
         )));
@@ -105,35 +103,6 @@ HTML
      * @return void
      */
     public static function personalConfig(Typecho_Widget_Helper_Form $form) {}
-
-    /**
-     * 获取 MDUI 加载来源 结尾不含 "/"
-     * 
-     * @deprecated
-     * @access public
-     * @param bool $output
-     * @return string
-     */
-    public static function mdui($output = true) {
-        static $result = "";
-        if (!empty($result)) {
-            if ($output) echo $result;
-            return $result;
-        }
-        $mdui = 0;
-        try {
-            $mdui = Helper::options()->plugin('CommentRuleset')->mdui;
-        } catch(Typecho_Plugin_Exception $e) {}
-        $mdui = intval($mdui);
-        $dist = array(
-            0 => Helper::options()->rootUrl . '/usr/plugins/CommentRuleset/mdui',
-            1 => 'https://cdn.jsdelivr.net/npm/mdui@0.4.3/dist',
-        );
-        if ($mdui < 0 || $mdui >= count($dist)) $mdui = 0;
-        $result = $dist[$mdui];
-        if ($output) echo $result;
-        return $result;
-    }
 
     /**
      * 读取规则集
@@ -171,7 +140,36 @@ HTML
      * @return array
      */
     public static function render($comment, $content) {
-        // touch(__DIR__ . '/FLAG'); // 临时：帮助我们更好地了解触发规律
+        static $statusMap = array(
+            self::FLAG_ACCEPT => 'approved',
+            self::FLAG_REVIEW => 'waiting',
+            self::FLAG_SPAM => 'spam',
+        );
+        $config = Helper::options()->plugin('CommentRuleset');
+        $params = array(
+            'uid' => empty($comment['authorId']) ? 0 : $comment['authorId'],
+            'nick' => $comment['author'],
+            'email' => $comment['mail'],
+            'url' => $comment['url'],
+            'content' => $comment['text'],
+            'length' => mb_strlen(preg_replace('/\\s/', '', $comment['text'])),
+            'ip' => $comment['ip'],
+            'ua' => $comment['agent'],
+        );
+        $ruleset = self::getRuleset();
+        $result = self::FLAG_SKIP;
+        foreach ($ruleset as $rule) {
+            if (in_array('on', $rule['status'])) {
+                $result = self::applyRule($rule['filename'], $params);
+                if ($result !== self::FLAG_SKIP) break;
+            }
+        }
+        if ($result === self::FLAG_DENY) {
+            Typecho_Cookie::set('__typecho_remember_text', $comment['text']);
+            throw new Typecho_Widget_Exception(isset($config->errmsg) ? $config->errmsg : '根据相关设置，该评论被拒绝。');
+        } elseif ($result !== self::FLAG_SKIP) {
+            $comment['status'] = $statusMap[$result];
+        }
         return $comment;
     }
 
@@ -183,7 +181,7 @@ HTML
      * @param array $params
      * @return int
      */
-    protected static function testComment($rule_filename, $params) {
+    protected static function applyRule($rule_filename, $params) {
         // $params 将在规则文件中被使用
         $result = include __DIR__ . '/runtime/' . $rule_filename;
         if ($result === false) {
