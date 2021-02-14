@@ -1,5 +1,7 @@
 <?php
+use function CommentRuleset\logger;
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
+require_once __DIR__ . '/libs/Logger.php';
 /**
  * Typecho 评论规则集插件 Action
  * 
@@ -24,8 +26,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      * @return void
      */
     public function action() {
-        error_reporting(E_ALL);
-        //Typecho_Widget::widget('Widget_User')->pass('administrator');
+        Typecho_Widget::widget('Widget_User')->pass('administrator');
         Helper::options()->to($this->options);
         $this->on($this->request->is('a=ruleDetails'))->ruleDetails();
         $this->on($this->request->is('a=translate'))->translate();
@@ -48,6 +49,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      */
     public function ruleDetails() {
         if ($this->request->isGet()) {
+            logger()->verbose('[API] ruleDetails');
             $this->response->setContentType('application/json');
             $ruid = $this->request->get('ruid', '');
             if (strlen($ruid) != 6) {
@@ -71,6 +73,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                     exit;
                 }
             }
+            logger()->warning("[API] 所请求的规则（RUID = {$ruid}）不存在！");
             $this->response->setStatus(404);
             exit;
         }
@@ -91,6 +94,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      */
     public function translate() {
         if ($this->request->isPost()) {
+            logger()->verbose('[API] translate');
             $this->response->setContentType('application/json');
             $input = $this->request->get('input', '');
             if ($input == '') {
@@ -128,6 +132,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      */
     public function saveRule() {
         if ($this->request->isPost()) {
+            logger()->verbose('[API] saveRule');
             $this->response->setContentType('application/json');
             $ruid = $this->request->get('ruid', '');
             $name = $this->request->get('name');
@@ -169,6 +174,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                     $compile_result = (new \CommentRuleset\RuleCompiler())->parse($rule)->export(new \CommentRuleset\PhpTranslator());
                     $filename = sha1('rule_' . $ruid . time()) . '.php';
                     if (file_put_contents(__DIR__ . '/runtime/' . $filename, $compile_result) === false) {
+                        logger()->error("[API] 尝试写入编译结果到文件 {$filename} 失败！");
                         $this->response->setStatus(201);
                         exit;
                     }
@@ -181,6 +187,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
             }
             uasort($ruleset, function($a, $b) { return $b['priority'] - $a['priority']; });
             if (!CommentRuleset_Plugin::saveRuleset($ruleset)) { // 写入长度不应该为 0
+                logger()->error('[API] 保存规则集失败！');
                 $this->response->setStatus(201);
                 exit;
             }
@@ -204,12 +211,14 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      */
     public function removeRules() {
         if ($this->request->isGet()) {
+            logger()->verbose('[API] removeRules');
             $this->response->setContentType('application/json');
             $ruids = $this->request->getArray('ruid');
             $ruleset = CommentRuleset_Plugin::getRuleset();
             $ruleset_ruids = array_keys($ruleset);
             foreach ($ruids as $ruid) {
                 if (!in_array($ruid, $ruleset_ruids) || in_array('locked', $ruleset[$ruid]['status'])) {
+                    logger()->warning("[API] 所请求的规则（RUID = {$ruid}）不存在或被锁定！");
                     $this->response->setStatus(403);
                     exit;
                 }
@@ -218,6 +227,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
                 unset($ruleset[$ruid]);
             }
             if (!CommentRuleset_Plugin::saveRuleset($ruleset)) { // 写入长度不应该为 0
+                logger()->error('[API] 保存规则集失败！');
                 $this->response->setStatus(500);
                 exit;
             }
@@ -241,6 +251,7 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
      */
     public function lockRule() {
         if ($this->request->isGet()) {
+            logger()->verbose('[API] lockRule');
             $this->response->setContentType('application/json');
             $ruid = $this->request->get('ruid');
             $opt = $this->request->get('opt');
@@ -255,12 +266,14 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
             }
             $ruleset = CommentRuleset_Plugin::getRuleset();
             if (!in_array($ruid, array_keys($ruleset))) {
+                logger()->warning("[API] 所请求的规则（RUID = {$ruid}）不存在！");
                 $this->response->setStatus(403);
                 exit;
             }
             $ruleset[$ruid]['status'] = array_diff($ruleset[$ruid]['status'], array('locked'));
             if ($opt) $ruleset[$ruid]['status'][] = 'locked';
             if (!CommentRuleset_Plugin::saveRuleset($ruleset)) { // 写入长度不应该为 0
+                logger()->error('[API] 保存规则集失败！');
                 $this->response->setStatus(500);
                 exit;
             }

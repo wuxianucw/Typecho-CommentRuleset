@@ -62,7 +62,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
         Helper::addAction('manage-commentruleset', 'CommentRuleset_Action');
         return _t('插件启用成功，请配置评论规则集。');
     }
-    
+
     /**
      * 禁用插件
      * 
@@ -76,7 +76,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
         Helper::removeAction('manage-commentruleset');
         return _t('插件已禁用，已保存的规则集自动失效但并未删除。');
     }
-    
+
     /**
      * 获取插件配置面板
      * 
@@ -84,17 +84,35 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      * @param Typecho_Widget_Helper_Form $form 配置面板
      * @return void
      */
-    public static function config(Typecho_Widget_Helper_Form $form)
-    {
+    public static function config(Typecho_Widget_Helper_Form $form) {
+        require_once __DIR__ . '/libs/Logger.php';
         $panelUrl = Helper::url('CommentRuleset/control-panel.php');
+
         /** 拒绝评论错误提示 */
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text('errmsg', NULL, '根据相关设置，该评论被拒绝。', '拒绝评论错误提示', _t(<<<HTML
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text('errmsg', NULL, '根据相关设置，该评论被拒绝。', _t('拒绝评论错误提示'), _t(<<<HTML
             本参数用于设置拒绝评论时的提示信息，该信息是否展示取决于您当前使用的模板。<br>
             如果您希望配置评论规则集，请移步<a href="{$panelUrl}" target="_blank">「控制台 -> 评论规则集」</a>。
 HTML
         )));
+
+        /** 日志级别 */
+        $logLevel = new Typecho_Widget_Helper_Form_Element_Select('logLevel', array(
+            -1 => '禁用日志',
+            CommentRuleset\Logger::ERROR => '仅 ERROR',
+            CommentRuleset\Logger::WARNING => 'WARNING 及以上',
+            CommentRuleset\Logger::INFO => 'INFO 及以上',
+            CommentRuleset\Logger::DEBUG => 'DEBUG 及以上',
+            CommentRuleset\Logger::VERBOSE => 'VERBOSE 及以上',
+        ), CommentRuleset\Logger::ERROR, _t('日志级别'), _t(<<<HTML
+            本参数用于设置插件记录的日志级别，默认仅记录 ERROR。<br>
+            日志级别由高到低：ERROR > WARNING > INFO > DEBUG > VERBOSE。若禁用日志，将不会记录任何内容。
+HTML
+        ));
+        $logLevel->addRule('enum', _t('必须选择合法的日志级别'), array(-1, CommentRuleset\Logger::ERROR, CommentRuleset\Logger::WARNING,
+            CommentRuleset\Logger::INFO, CommentRuleset\Logger::DEBUG, CommentRuleset\Logger::VERBOSE));
+        $form->addInput($logLevel);
     }
-    
+
     /**
      * 个人用户的配置面板
      * 
@@ -130,7 +148,7 @@ HTML
             "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
             . str_replace(array('\\', '\''), array('\\\\', '\\\''), serialize($ruleset)) . "';\n");
     }
-    
+
     /**
      * 评论过滤
      * 

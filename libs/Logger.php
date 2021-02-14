@@ -132,3 +132,21 @@ class NoLog extends Logger {
     public function warning($text) {}
     public function error($text) {}
 }
+
+/**
+ * Logger 工厂函数
+ * 
+ * @return CommentRuleset\Logger
+ */
+function logger() {
+    static $logger = NULL;
+    if ($logger) return $logger;
+    $level = \Helper::options()->plugin('CommentRuleset');
+    $level = isset($level->logLevel) ? $level->logLevel : Logger::ERROR;
+    if ($level == -1) {
+        $logger = new NoLog;
+        return $logger;
+    }
+    $logger = new Logger($level);
+    return $logger;
+}

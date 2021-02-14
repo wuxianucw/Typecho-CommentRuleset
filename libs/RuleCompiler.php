@@ -1,6 +1,7 @@
 <?php
 namespace CommentRuleset;
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
+require_once __DIR__ . '/Logger.php';
 /**
  * Typecho 评论规则集插件 规则编译器
  * 
@@ -31,6 +32,7 @@ class RuleCompiler {
      * @throws \CommentRuleset\Exception
      */
     public function parse($rule) {
+        logger()->verbose("[Parser] 开始解析规则：\n{$rule}");
         $rule = explode("\n", trim($rule)); // 按行分割，便于处理注释
         $special = array( // special 表 'expect' => 'ClassName'
             '"' => '\CommentRuleset\DoubleQuotedText',
@@ -175,6 +177,7 @@ class RuleCompiler {
         if (!$node instanceof Root) throw new Exception('解析时遇到了意外的 <code>EOF</code>。'); // 当前节点不是根节点，结构不完整
         if ($reading != '') throw new Exception('解析时遇到了无法处理的 <code>' . htmlspecialchars($reading) . '</code>。'); // 读入串不为空，非法
         $this->_ast = $ast;
+        logger()->verbose('[Parser] 规则解析完成。');
         return $this;
     }
 
@@ -198,6 +201,7 @@ class RuleCompiler {
      * @throws \CommentRuleset\Exception
      */
     public function export($translator, $ifPrint = false) {
+        logger()->verbose('[Export] 导出规则为 ' . get_class($translator) . ' 类型……');
         if (!function_exists('\CommentRuleset\export_dfs')) {
             function export_dfs($node, $translator) { // 内部定义递归函数
                 if (!$node instanceof ASTNode) return ''; // 跳过非 ASTNode 节点
@@ -216,6 +220,7 @@ class RuleCompiler {
         }
         $result = export_dfs($this->_ast, $translator);
         if ($ifPrint) echo $result;
+        logger()->verbose('[Export] 导出完成。');
         return $result;
     }
 }
@@ -223,7 +228,12 @@ class RuleCompiler {
 /**
  * 规则编译器异常类
  */
-class Exception extends \Exception {}
+class Exception extends \Exception {
+    function __construct($message, $code = 0, $previous = null) {
+        parent::__construct($message, $code, $previous);
+        logger()->verbose('[Exception] ' . $message);
+    }
+}
 
 /**
  * 运算符处理类
