@@ -22,6 +22,7 @@ if ($user->logged > 0) {
 $pageData = array(
     'apiBase' => $options->index . '/action/manage-commentruleset',
     'sourceBase' => $options->rootUrl . '/usr/plugins/CommentRuleset/',
+    'monacoUrl' => CommentRuleset_Plugin::getMonacoUrl(),
     'title' => $menu->title,
     'account' => array($logged, $options->adminUrl . 'profile.php', $options->logoutUrl),
     'menu' => $menuOutputer->output(),

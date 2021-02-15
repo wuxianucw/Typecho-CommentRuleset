@@ -89,7 +89,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
         $panelUrl = Helper::url('CommentRuleset/control-panel.php');
 
         /** 拒绝评论错误提示 */
-        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text('errmsg', NULL, '根据相关设置，该评论被拒绝。', _t('拒绝评论错误提示'), _t(<<<HTML
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text('errmsg', null, '根据相关设置，该评论被拒绝。', _t('拒绝评论错误提示'), _t(<<<HTML
             本参数用于设置拒绝评论时的提示信息，该信息是否展示取决于您当前使用的模板。<br>
             如果您希望配置评论规则集，请移步<a href="{$panelUrl}" target="_blank">「控制台 -> 评论规则集」</a>。
 HTML
@@ -111,6 +111,26 @@ HTML
         $logLevel->addRule('enum', _t('必须选择合法的日志级别'), array(-1, CommentRuleset\Logger::ERROR, CommentRuleset\Logger::WARNING,
             CommentRuleset\Logger::INFO, CommentRuleset\Logger::DEBUG, CommentRuleset\Logger::VERBOSE));
         $form->addInput($logLevel);
+
+        /** Monaco 加载来源 */
+        $monaco = new Typecho_Widget_Helper_Form_Element_Select('monaco', array(
+            0 => 'jsDelivr',
+            1 => 'BootCDN',
+            -1 => '自定义',
+        ), 0, _t('Monaco 加载来源'), _t(<<<HTML
+            本参数用于设置规则文本编辑模式用到的 Monaco 编辑器的加载来源，默认为 jsDelivr。<br>
+            如果您希望自定义加载来源，请在本参数选择自定义后再在下方“自定义 Monaco 加载来源”中填写。所需要的 Monaco 版本为 0.20.0 及以上。
+HTML
+        ));
+        $monaco->addRule('enum', _t('必须正确设置 Monaco 加载来源'), array(0, 1, -1));
+        $form->addInput($monaco);
+
+        /** 自定义 Monaco 加载来源 */
+        $form->addInput(new Typecho_Widget_Helper_Form_Element_Text('customizedMonacoUrl', null, '', _t('自定义 Monaco 加载来源'), _t(<<<HTML
+            本参数用于自定义 Monaco 的加载来源，在使用本参数前，请先将“Monaco 加载来源”设置为“自定义”。<br>
+            您自定义的 Monaco 来源 URL 应该指向 Monaco 的 <code>min/vs</code> 目录，形如：<code>https://cdn.jsdelivr.net/npm/monaco-editor@0.22.3/min/vs</code>。
+HTML
+        )));
     }
 
     /**
@@ -147,6 +167,24 @@ HTML
         return file_put_contents(__DIR__ . '/runtime/ruleset.php',
             "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n\$ruleset = '"
             . str_replace(array('\\', '\''), array('\\\\', '\\\''), serialize($ruleset)) . "';\n");
+    }
+
+    /**
+     * 获取 Monaco 加载来源
+     * 
+     * @access public
+     * @return string
+     */
+    public static function getMonacoUrl() {
+        $options = Helper::options()->plugin('CommentRuleset');
+        $id = isset($options->monaco) ? intval($options->monaco) : 0;
+        if ($id == -1) return isset($options->customizedMonacoUrl) ? $options->customizedMonacoUrl : '';
+        if ($id < 0 || $id > 1) $id = 0; // range safe
+        static $cdn = array(
+            0 => 'https://cdn.jsdelivr.net/npm/monaco-editor@0.22.3/min/vs',
+            1 => 'https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.21.2/min/vs'
+        );
+        return $cdn[$id];
     }
 
     /**

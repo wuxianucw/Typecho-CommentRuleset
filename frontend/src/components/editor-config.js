@@ -1,4 +1,7 @@
 export const monacoConfig = {
+    paths: {
+        vs: window.__pageData.monacoUrl,
+    },
     'vs/nls': {
         availableLanguages: { '*': 'zh-cn' },
     },
