@@ -361,33 +361,6 @@ export default function OverviewPage(props) {
         setNetworkErrorDialogOpen(false);
     };
 
-    // 调试用代码
-    if (!window.loadRules) {
-        console.warn("请移除 window.loadRules 调试代码");
-        window.loadRules = () => {
-            console.warn("当你还在调用 window.loadRules 时，你应该反思一下你是不是有什么问题");
-            source.current = axios.CancelToken.source();
-            setBackdropOpen(true);
-            axios.get(window.__pageData.apiBase, {
-                params: {
-                    a: "removeRules",
-                    ruid: [],
-                },
-                cancelToken: source.current.token,
-            }).then(({ data }) => {
-                setRows(transformRuleset(data));
-                setSelected([]);
-                setBackdropOpen(false);
-            }).catch((error) => {
-                if (!axios.isCancel(error)) {
-                    console.error(error);
-                    setNetworkErrorDialogOpen(true);
-                }
-                setBackdropOpen(false);
-            });
-        };
-    }
-
     return (
         <div className={classes.root}>
             <Paper className={classes.paper}>
