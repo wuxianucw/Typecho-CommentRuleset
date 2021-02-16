@@ -2,7 +2,7 @@
 name: 添加新功能
 about: 申请添加某个新功能
 title: add
-labels: Feature Request / 功能请求, help wanted / 需要帮助
+labels: ''
 assignees: ''
 
 ---
