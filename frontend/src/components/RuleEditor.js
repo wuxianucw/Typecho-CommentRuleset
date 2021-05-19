@@ -327,7 +327,10 @@ const RuleEditor = React.forwardRef((props, ref) => {
     };
 
     const handleHighlightButtonClick = (key) => {
-        ((element) => (element && element.scrollIntoView()))(document.querySelector(`div[data-key="${key}"]`));
+        ((e) => (e && window.scrollTo({
+            top: Math.max(e.offsetTop - document.querySelector('header.MuiAppBar-root')?.offsetHeight - 2, 0),
+            behavior: "smooth",
+        })))(document.querySelector(`div[data-key="${key}"]`));
         setHighlightBlock(([_, timeoutId]) => {
             if (timeoutId !== undefined) clearTimeout(timeoutId);
             return [key, setTimeout(() => {
