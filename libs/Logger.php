@@ -139,7 +139,7 @@ class NoLog extends Logger {
  * @return CommentRuleset\Logger
  */
 function logger() {
-    static $logger = NULL;
+    static $logger = null;
     if ($logger) return $logger;
     $level = \Helper::options()->plugin('CommentRuleset');
     $level = isset($level->logLevel) ? $level->logLevel : Logger::ERROR;

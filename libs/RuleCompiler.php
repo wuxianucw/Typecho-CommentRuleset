@@ -4,7 +4,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 require_once __DIR__ . '/Logger.php';
 /**
  * Typecho 评论规则集插件 规则编译器
- * 
+ *
  * @package CommentRuleset
  * @author wuxianucw
  * @license GNU Affero General Public License v3.0
@@ -13,7 +13,7 @@ require_once __DIR__ . '/Logger.php';
 class RuleCompiler {
     /**
      * 抽象语法树
-     * 
+     *
      * @access protected
      * @var \CommentRuleset\Root
      */
@@ -25,7 +25,7 @@ class RuleCompiler {
 
     /**
      * 解析规则
-     * 
+     *
      * @access public
      * @param string $rule
      * @return \CommentRuleset\RuleCompiler
@@ -85,7 +85,7 @@ class RuleCompiler {
                     } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token (*) 还可能是运算符开始的 Token
                         if (!$node instanceof Judge || $node->else != null || $node->pos == 2) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
                             throw new Exception('解析时遇到了意外的 <code>!</code>。');
-                        if ($node->pos == 0 && $node->name == '') { // 此时这是一个运算符开始的 Token
+                        if ($node->pos == 0 && $node->name == null) { // 此时这是一个运算符开始的 Token
                             if ($reading == '') throw new Exception('解析时遇到了意外的 <code>!</code>。');
                             $node->name($reading); // 设置 name
                             $reading = $line[$i];
@@ -115,6 +115,7 @@ class RuleCompiler {
                             $reading = '';
                         }
                         if (!$node->isLegal()) throw new Exception('解析时遇到了意外的 <code>;</code>。'); // Judge 必须合法
+                        $node->matchType(); // 执行类型检查
                         $node = $node->parent;
                         if ($node instanceof Root) $eor = true; // 如果已经回到根节点，则期望规则结束
                     } elseif ($node instanceof Judge && $node->pos == 0 && in_array($line[$i], $special_flag)) { // 在 Judge 条件块中读到特殊字面量
@@ -125,14 +126,14 @@ class RuleCompiler {
                             throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
                         if ($reading != '') $node->optr($reading); // 设置运算符
                         $reading = '';
-                        if ($node->name == '' || $node->optr == null) // 完整性检查
+                        if ($node->name == null || $node->optr == null) // 完整性检查
                             throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
                         $expect = $line[$i]; // 标记 expect
                         $child = new $special[$expect]();
                         $node->target($child);
                         $node = $child;
                     } elseif ($optr == false && $node instanceof Judge && $node->pos == 0 && strpos($optr_flag, $line[$i]) !== false) { // 在 Judge 条件块中当运算符标记为 false 时读到可能构成运算符的字符
-                        if ($node->name != '' || $reading == '') // 此时需要设置 name，所以 name 必须为空，同时读入串中必须有内容
+                        if ($node->name != null || $reading == '') // 此时需要设置 name，所以 name 必须为空，同时读入串中必须有内容
                             throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
                         if ($node->optr != null) // 此时不应存在运算符
                             throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
@@ -183,7 +184,7 @@ class RuleCompiler {
 
     /**
      * 调试信息
-     * 
+     *
      * @access public
      * @return array
      */
@@ -193,7 +194,7 @@ class RuleCompiler {
 
     /**
      * 导出为其他形式
-     * 
+     *
      * @access public
      * @param \CommentRuleset\Translator $translator
      * @param bool $ifPrint 是否输出，默认 false
@@ -236,39 +237,187 @@ class Exception extends \Exception {
 }
 
 /**
+ * 类型
+ */
+class Type {
+    const NUMBER = 0b0001;
+    const TEXT = 0b0010;
+    const REGEX = 0b0100;
+    const SIGNAL = 0b1000;
+
+    /**
+     * 类型检查
+     *
+     * 检查 `$main` 中是否包含 `$sub`
+     *
+     * @access public
+     * @param int $main
+     * @param int $sub
+     * @return bool
+     */
+    public static function check($main, $sub) {
+        return ($main & $sub) === $sub;
+    }
+
+    /**
+     * 类型匹配
+     *
+     * 检查 `$left` 与 `$right` 交集是否不为空
+     *
+     * @access public
+     * @param int $left
+     * @param int $left
+     * @return bool
+     */
+    public static function matchType($left, $right) {
+        return ($left & $right) !== 0;
+    }
+
+    /**
+     * 获取类型名称
+     *
+     * @access public
+     * @param int $typeId
+     * @return string[]
+     */
+    public static function getDisplayName($typeId) {
+        static $map = array(
+            self::NUMBER => 'number',
+            self::TEXT => 'text',
+            self::REGEX => 'regex',
+            self::SIGNAL => 'signal',
+        );
+        $result = array();
+        foreach ($map as $type => $name) {
+            if (self::check($typeId, $type)) $result[] = $name;
+        }
+        return $result;
+    }
+}
+
+/**
  * 运算符处理类
  */
 class Operator {
     /**
      * 运算符表
-     * 
+     *
      * @var array
      */
     const OPTRS = array('==', '!=', '<', '>', '<=', '>=', '<-', '~');
 
     /**
+     * 实际类型需求映射表
+     *
+     * @var array
+     */
+    const RTYPE_MAP = array(
+        '==' => Type::NUMBER | Type::TEXT,
+        '!=' => Type::NUMBER | Type::TEXT,
+        '<' => Type::NUMBER,
+        '>' => Type::NUMBER,
+        '<=' => Type::NUMBER,
+        '>=' => Type::NUMBER,
+        '<-' => Type::TEXT,
+        '~' => Type::REGEX,
+    );
+
+    /**
      * 运算符类型
-     * 
+     *
      * @access public
      * @var string
      */
     public $type;
 
     /**
+     * 需要满足的实际类型
+     *
+     * @access public
+     * @var string
+     */
+    public $rType;
+
+    /**
      * 构造函数
-     * 
+     *
      * @access public
      * @param string $operator
      * @return void
      * @throws \CommentRuleset\Exception
      */
     public function __construct($optr) {
-        if (in_array($optr, self::OPTRS)) $this->type = $optr;
-        else throw new Exception('解析时遇到了无法识别的运算符 <code>' . htmlspecialchars($optr) . '</code>。');
+        if (!in_array($optr, self::OPTRS))
+            throw new Exception('解析时遇到了无法识别的运算符 <code>' . htmlspecialchars($optr) . '</code>。');
+        $this->type = $optr;
+        $this->rType = self::RTYPE_MAP[$optr];
     }
 
     public function __toString() {
         return $this->type;
+    }
+}
+
+/**
+ * 名称标识符
+ */
+class Name {
+    /**
+     * 合法名称标识符列表
+     *
+     * @var array
+     */
+    const NAMES = array('uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua');
+
+    /**
+     * 实际类型需求映射表
+     *
+     * @var array
+     */
+    const RTYPE_MAP = array(
+        'uid' => Type::NUMBER,
+        'nick' => Type::TEXT | Type::REGEX,
+        'email' => Type::TEXT | Type::REGEX,
+        'url' => Type::TEXT | Type::REGEX,
+        'content' => Type::TEXT | Type::REGEX,
+        'length' => Type::NUMBER,
+        'ip' => Type::TEXT | Type::REGEX,
+        'ua' => Type::TEXT | Type::REGEX,
+    );
+
+    /**
+     * 名称标识符
+     *
+     * @access public
+     * @var string
+     */
+    public $name;
+
+    /**
+     * 需要满足的实际类型
+     *
+     * @access public
+     * @var string
+     */
+    public $rType;
+
+    /**
+     * 构造函数
+     *
+     * @access public
+     * @param string $name
+     * @return void
+     * @throws \CommentRuleset\Exception
+     */
+    public function __construct($name) {
+        if (!in_array($name, self::NAMES))
+            throw new Exception('解析时遇到了无法识别的名称标识符 <code>' . htmlspecialchars($name) . '</code>。');
+        $this->name = $name;
+        $this->rType = self::RTYPE_MAP[$name];
+    }
+
+    public function __toString() {
+        return $this->name;
     }
 }
 
@@ -278,7 +427,7 @@ class Operator {
 class ASTNode {
     /**
      * 父节点
-     * 
+     *
      * @access public
      * @var \CommentRuleset\ASTNode
      */
@@ -286,9 +435,9 @@ class ASTNode {
 
     /**
      * 标志量
-     * 
+     *
      * 仅在 Judge 中起作用
-     * 
+     *
      * @access public
      * @var int|null
      */
@@ -306,7 +455,7 @@ class ASTNode {
 class Root extends ASTNode {
     /**
      * 下级 Judge
-     * 
+     *
      * @access public
      * @var \CommentRuleset\Judge
      */
@@ -329,23 +478,16 @@ class Root extends ASTNode {
  */
 class Judge extends ASTNode {
     /**
-     * 合法 name 列表
-     * 
-     * @var array
-     */
-    const NAMES = array('uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua');
-
-    /**
      * 判断标识
-     * 
+     *
      * @access public
-     * @var string
+     * @var \CommentRuleset\Name
      */
     public $name;
 
     /**
      * 运算符
-     * 
+     *
      * @access public
      * @var \CommentRuleset\Operator
      */
@@ -353,7 +495,7 @@ class Judge extends ASTNode {
 
     /**
      * 比较目标
-     * 
+     *
      * @access public
      * @var \CommentRuleset\Value
      */
@@ -361,7 +503,7 @@ class Judge extends ASTNode {
 
     /**
      * `:`
-     * 
+     *
      * @access public
      * @var mixed
      */
@@ -369,7 +511,7 @@ class Judge extends ASTNode {
 
     /**
      * `!`
-     * 
+     *
      * @access public
      * @var mixed
      */
@@ -377,7 +519,7 @@ class Judge extends ASTNode {
 
     /**
      * 标志量
-     * 
+     *
      * @access public
      * @var int
      */
@@ -385,7 +527,7 @@ class Judge extends ASTNode {
 
     public function __construct() {
         parent::__construct();
-        $this->name = '';
+        $this->name = null;
         $this->optr = null;
         $this->target = null;
         $this->then = null;
@@ -404,8 +546,7 @@ class Judge extends ASTNode {
     }
 
     public function name($name) {
-        if (!in_array($name, self::NAMES)) throw new Exception('解析时遇到了无法识别的名称 <code>' . htmlspecialchars($name) . '</code>。');
-        $this->name = $name;
+        $this->name = new Name($name);
     }
 
     public function optr($optr) {
@@ -423,6 +564,22 @@ class Judge extends ASTNode {
             && $this->target != null
             && ($this->then != null || $this->else != null);
     }
+
+    public function matchType() {
+        if (!Type::matchType($this->optr->rType, $this->name->rType))
+            throw new Exception('类型不匹配：名称标识符 <code>' . htmlspecialchars($this->name)
+                . '</code> 具有类型 <code>' . implode(' | ', Type::getDisplayName($this->name->rType))
+                . '</code>，而运算符 <code>' . htmlspecialchars($this->optr) . '</code> 需要类型 <code>'
+                . implode(' | ', Type::getDisplayName($this->optr->rType)) . '</code>。');
+        if (!Type::check($this->optr->rType, $this->target->rType))
+            throw new Exception('类型不匹配：运算符 <code>' . htmlspecialchars($this->optr) . '</code> 需要类型 <code>'
+                . implode(' | ', Type::getDisplayName($this->optr->rType)) . '</code>，而被比较的值为 <code>'
+                . implode(' | ', Type::getDisplayName($this->target->rType)) . '</code> 类型。');
+        if (!Type::check($this->name->rType, $this->target->rType))
+            throw new Exception('类型不匹配：名称标识符 <code>' . htmlspecialchars($this->name)
+            . '</code> 具有类型 <code>' . implode(' | ', Type::getDisplayName($this->name->rType))
+            . '</code>，而被比较的值为 <code>' . implode(' | ', Type::getDisplayName($this->target->rType)) . '</code> 类型。');
+    }
 }
 
 /**
@@ -431,14 +588,14 @@ class Judge extends ASTNode {
 class Value extends ASTNode {
     /**
      * signal 表
-     * 
+     *
      * @var array
      */
     const SIGNALS = array('accept', 'review', 'spam', 'deny', 'skip');
 
     /**
      * 类型
-     * 
+     *
      * @access public
      * @var string
      */
@@ -446,21 +603,32 @@ class Value extends ASTNode {
 
     /**
      * 值
-     * 
+     *
      * @access public
      * @var mixed
      */
     public $value;
 
+    /**
+     * 实际类型
+     *
+     * @access public
+     * @var int
+     */
+    public $rType;
+
     public function set($value) {
         $intval = intval($value);
         if (!$intval && $value !== '0') {
-            if (!in_array($value, self::SIGNALS)) throw new Exception('解析时遇到了无法识别的标识 <code>' . htmlspecialchars($value) . '</code>。');
+            if (!in_array($value, self::SIGNALS))
+                throw new Exception('解析时遇到了无法识别的标识 <code>' . htmlspecialchars($value) . '</code>。');
             $this->type = 'signal';
             $this->value = $value;
+            $this->rType = Type::SIGNAL;
         } else {
             $this->type = 'number';
             $this->value = $intval;
+            $this->rType = Type::NUMBER;
         }
     }
 
@@ -476,11 +644,12 @@ class SingleQuotedText extends Value {
     public function set($text) {
         $this->type = 'sqtext';
         $this->value = $text;
+        $this->rType = Type::TEXT;
     }
 
     /**
      * 显式转为字符串
-     * 
+     *
      * @access public
      * @return string 两侧没有引号且反转义后的文本内容
      */
@@ -490,7 +659,7 @@ class SingleQuotedText extends Value {
 
     /**
      * 隐式转为字符串 魔术方法
-     * 
+     *
      * @access public
      * @return string 两侧有引号且转义后的文本内容
      */
@@ -506,11 +675,12 @@ class DoubleQuotedText extends Value {
     public function set($text) {
         $this->type = 'dqtext';
         $this->value = $text;
+        $this->rType = Type::TEXT;
     }
 
     /**
      * 显式转为字符串
-     * 
+     *
      * @access public
      * @return string 两侧没有引号且反转义后的文本内容
      */
@@ -520,7 +690,7 @@ class DoubleQuotedText extends Value {
 
     /**
      * 隐式转为字符串 魔术方法
-     * 
+     *
      * @access public
      * @return string 两侧有引号且转义后的文本内容
      */
@@ -535,7 +705,7 @@ class DoubleQuotedText extends Value {
 class Regex extends Value {
     /**
      * 模式修饰符
-     * 
+     *
      * @access public
      * @var string
      */
@@ -545,12 +715,13 @@ class Regex extends Value {
         if (self::regexCompileTest("/$regex/")) {
             $this->type = 'regex';
             $this->value = $regex;
+            $this->rType = Type::REGEX;
         } else throw new Exception('正则表达式编译失败。');
     }
 
     /**
      * 正则表达式编译测试
-     * 
+     *
      * @access public
      * @param string $regex 正则表达式
      * @return bool
@@ -561,7 +732,7 @@ class Regex extends Value {
 
     /**
      * 显式转为字符串
-     * 
+     *
      * @access public
      * @return string 两侧没有引号也未被转义的正则表达式
      */
@@ -571,7 +742,7 @@ class Regex extends Value {
 
     /**
      * 隐式转为字符串 魔术方法
-     * 
+     *
      * @access public
      * @return string 两侧有引号且转义后的正则表达式
      */
@@ -586,7 +757,7 @@ class Regex extends Value {
 abstract class Translator {
     /**
      * 进入节点前
-     * 
+     *
      * @access public
      * @param \CommentRuleset\ASTNode $node
      * @return bool true 表示进入，false 表示不进入。无论进不进入，均会对应调用 leaveNode
@@ -597,7 +768,7 @@ abstract class Translator {
 
     /**
      * 离开节点后
-     * 
+     *
      * @access public
      * @param \CommentRuleset\ASTNode $node
      * @return bool true 表示保留该节点中已翻译的内容，false 表示丢弃。
@@ -608,7 +779,7 @@ abstract class Translator {
 
     /**
      * 节点开始标记
-     * 
+     *
      * @access public
      * @param \CommentRuleset\ASTNode $node
      * @return string
@@ -618,7 +789,7 @@ abstract class Translator {
 
     /**
      * 节点结束标记
-     * 
+     *
      * @access public
      * @param \CommentRuleset\ASTNode $node
      * @return string
@@ -718,7 +889,7 @@ class PhpTranslator extends Translator {
 class JsonTranslator extends Translator {
     /**
      * JSON 结构数组
-     * 
+     *
      * @access public
      * @var array
      */
@@ -726,7 +897,7 @@ class JsonTranslator extends Translator {
 
     /**
      * 编号计数器
-     * 
+     *
      * @access protected
      * @var int
      */
@@ -734,7 +905,7 @@ class JsonTranslator extends Translator {
 
     /**
      * flag 栈
-     * 
+     *
      * @access protected
      * @var array
      */
