@@ -203,23 +203,21 @@ class RuleCompiler {
      */
     public function export($translator, $ifPrint = false) {
         logger()->verbose('[Export] 导出规则为 ' . get_class($translator) . ' 类型……');
-        if (!function_exists('\CommentRuleset\export_dfs')) {
-            function export_dfs($node, $translator) { // 内部定义递归函数
-                if (!$node instanceof ASTNode) return ''; // 跳过非 ASTNode 节点
-                if (!$translator->enterNode($node)) return ''; // Translator::enterNode() 钩子
-                $result = $translator->nodeStartToken($node); // Translator::nodeStartToken() 钩子
-                if ($node instanceof Root) { // 处理需要递归调用的情况
-                    $result .= export_dfs($node->judge, $translator);
-                } elseif ($node instanceof Judge) {
-                    $result .= export_dfs($node->then, $translator);
-                    $result .= export_dfs($node->else, $translator);
-                }
-                $result .= $translator->nodeEndToken($node); // Translator::nodeEndToken() 钩子
-                if (!$translator->leaveNode($node)) return ''; // Translator::leaveNode() 钩子
-                return $result;
+        $dfs = function($node, $translator) use (&$dfs) { // 内部定义递归函数
+            if (!$node instanceof ASTNode) return ''; // 跳过非 ASTNode 节点
+            if (!$translator->enterNode($node)) return ''; // Translator::enterNode() 钩子
+            $result = $translator->nodeStartToken($node); // Translator::nodeStartToken() 钩子
+            if ($node instanceof Root) { // 处理需要递归调用的情况
+                $result .= $dfs($node->judge, $translator);
+            } elseif ($node instanceof Judge) {
+                $result .= $dfs($node->then, $translator);
+                $result .= $dfs($node->else, $translator);
             }
-        }
-        $result = export_dfs($this->_ast, $translator);
+            $result .= $translator->nodeEndToken($node); // Translator::nodeEndToken() 钩子
+            if (!$translator->leaveNode($node)) return ''; // Translator::leaveNode() 钩子
+            return $result;
+        };
+        $result = $dfs($this->_ast, $translator);
         if ($ifPrint) echo $result;
         logger()->verbose('[Export] 导出完成。');
         return $result;
@@ -240,10 +238,10 @@ class Exception extends \Exception {
  * 类型
  */
 class Type {
-    const NUMBER = 0b0001;
-    const TEXT = 0b0010;
-    const REGEX = 0b0100;
-    const SIGNAL = 0b1000;
+    const NUMBER = 1;
+    const TEXT = 1 << 1;
+    const REGEX = 1 << 2;
+    const SIGNAL = 1 << 3;
 
     /**
      * 类型检查
