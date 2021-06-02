@@ -2,52 +2,59 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 /**
  * Typecho 评论规则集插件
- * 
+ *
  * @package CommentRuleset
  * @author wuxianucw
- * @version 1.0.0
+ * @version 0.1.0
  * @license GNU Affero General Public License v3.0
  * @link https://ucw.moe/
  */
 class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
     /**
+     * 插件版本
+     *
+     * @var string
+     */
+    const VERSION = '0.1.0';
+
+    /**
      * 评论通过标志
-     * 
+     *
      * @var int
      */
     const FLAG_ACCEPT = 0x00;
-    
+
     /**
      * 评论待审核标志
-     * 
+     *
      * @var int
      */
     const FLAG_REVIEW = 0x0c;
 
     /**
      * 评论垃圾标志
-     * 
+     *
      * @var int
      */
     const FLAG_SPAM = 0x0d;
 
     /**
      * 评论禁止标志
-     * 
+     *
      * @var int
      */
     const FLAG_DENY = 0x0b;
 
     /**
      * 无操作标志
-     * 
+     *
      * @var int
      */
     const FLAG_SKIP = 0x01;
 
     /**
      * 激活插件
-     * 
+     *
      * @access public
      * @return void
      * @throws Typecho_Plugin_Exception
@@ -65,7 +72,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
 
     /**
      * 禁用插件
-     * 
+     *
      * @static
      * @access public
      * @return void
@@ -79,7 +86,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
 
     /**
      * 获取插件配置面板
-     * 
+     *
      * @access public
      * @param Typecho_Widget_Helper_Form $form 配置面板
      * @return void
@@ -135,7 +142,7 @@ HTML
 
     /**
      * 个人用户的配置面板
-     * 
+     *
      * @access public
      * @param Typecho_Widget_Helper_Form $form
      * @return void
@@ -144,7 +151,7 @@ HTML
 
     /**
      * 读取规则集
-     * 
+     *
      * @access public
      * @return array
      */
@@ -158,7 +165,7 @@ HTML
 
     /**
      * 保存规则集
-     * 
+     *
      * @access public
      * @param array $ruleset
      * @return int|false
@@ -171,7 +178,7 @@ HTML
 
     /**
      * 获取 Monaco 加载来源
-     * 
+     *
      * @access public
      * @return string
      */
@@ -189,7 +196,7 @@ HTML
 
     /**
      * 评论过滤
-     * 
+     *
      * @access public
      * @param array $comment
      * @param mixed $content
@@ -231,7 +238,7 @@ HTML
 
     /**
      * 用指定规则检测评论
-     * 
+     *
      * @access protected
      * @param string $rule_filename
      * @param array $params

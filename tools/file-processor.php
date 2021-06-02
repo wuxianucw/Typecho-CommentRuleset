@@ -20,6 +20,7 @@ if ($user->logged > 0) {
     $logged = '最后登录: ' . $logged->word();
 } else $logged = $user->screenName;
 $pageData = array(
+    'version' => CommentRuleset_Plugin::VERSION,
     'apiBase' => $options->index . '/action/manage-commentruleset',
     'sourceBase' => $options->rootUrl . '/usr/plugins/CommentRuleset/',
     'monacoUrl' => CommentRuleset_Plugin::getMonacoUrl(),

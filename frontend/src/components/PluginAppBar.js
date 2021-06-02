@@ -9,6 +9,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import GitHubIcon from '@material-ui/icons/GitHub';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
+import Badge from '@material-ui/core/Badge';
 import useScrollTrigger from '@material-ui/core/useScrollTrigger';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
@@ -54,6 +55,7 @@ function ElevationScroll(props) {
 
 export default function PluginAppBar(props) {
     const classes = useStyle();
+    const updateAvailable = props.updateAvailable ?? false;
 
     return (
         <ElevationScroll>
@@ -92,14 +94,18 @@ export default function PluginAppBar(props) {
                                 <IconButton color="inherit"><ExitToAppIcon /></IconButton>
                             </a>
                         </Tooltip>
-                        <Tooltip title="GitHub 仓库">
+                        <Tooltip title={`GitHub 仓库${updateAvailable ? '：有新版本可用' : ''}`}>
                             <a
                                 className={classes.noColor}
-                                href="https://github.com/wuxianucw/Typecho-CommentRuleset"
+                                href={`https://github.com/wuxianucw/Typecho-CommentRuleset${updateAvailable ? '/releases' : ''}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                                <IconButton color="inherit" edge="end"><GitHubIcon /></IconButton>
+                                <IconButton color="inherit" edge="end">
+                                    <Badge color="error" variant="dot" invisible={!updateAvailable}>
+                                        <GitHubIcon />
+                                    </Badge>
+                                </IconButton>
                             </a>
                         </Tooltip>
                     </div>

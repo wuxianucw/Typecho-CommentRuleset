@@ -1,4 +1,6 @@
 import React, { lazy, Suspense } from 'react';
+import axios from 'axios';
+import semver from 'semver';
 import { HashRouter as Router, Route, Redirect } from 'react-router-dom';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Tabs from '@material-ui/core/Tabs';
@@ -50,17 +52,35 @@ const useStyles = makeStyles((theme) => ({
 export default function App() {
     const classes = useStyles();
     const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
+    const [updateAvailable, setUpdateAvailable] = React.useState(false);
 
     const handleDrawerToggle = () => {
         setMobileDrawerOpen(!mobileDrawerOpen);
     };
+
+    React.useEffect(() => {
+        window.__pageData.version = '0.1.0';
+        if (!window.__pageData.version) return;
+        const currentVer = semver.valid(window.__pageData.version);
+        if (!currentVer) return;
+        axios.get('https://api.github.com/repos/wuxianucw/Typecho-CommentRuleset/releases/latest')
+            .then(({ data }) => {
+                const { tag_name, prerelease } = data;
+                const ghVer = semver.clean(tag_name);
+                if (semver.lt(currentVer, ghVer)) {
+                    if (!prerelease || semver.major(ghVer) === semver.major(currentVer)) {
+                        setUpdateAvailable(true);
+                    }
+                }
+            }).catch(() => {});
+    });
 
     return (
         <Router>
             <MuiThemeProvider theme={theme}>
                 <div className={classes.root}>
                     <CssBaseline />
-                    <PluginAppBar onMenuButtonClick={handleDrawerToggle} />
+                    <PluginAppBar onMenuButtonClick={handleDrawerToggle} updateAvailable={updateAvailable} />
                     <ResponsiveDrawer open={mobileDrawerOpen} onMobileClose={handleDrawerToggle}>
                         <div className={classes.toolbar} />
                         <MenuList />
