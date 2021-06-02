@@ -929,7 +929,7 @@ class JsonTranslator extends Translator {
             if ($node->target->type == 'number') $target = $node->target->value; // 不进行类型转换以保证其在生成的 JSON 中不被转为文本
             else $target = $node->target->toString();
             $judge = array(
-                'name' => $node->name,
+                'name' => $node->name->name,
                 'optr' => strval($node->optr),
                 'target' => $target,
                 'parent' => $flag == '#Main' ? null : $parent_flag,
