@@ -59,7 +59,6 @@ export default function App() {
     };
 
     React.useEffect(() => {
-        window.__pageData.version = '0.1.0';
         if (!window.__pageData.version) return;
         const currentVer = semver.valid(window.__pageData.version);
         if (!currentVer) return;
