@@ -64,15 +64,14 @@ export default function App() {
         if (!currentVer) return;
         axios.get('https://api.github.com/repos/wuxianucw/Typecho-CommentRuleset/releases/latest')
             .then(({ data }) => {
-                const { tag_name, prerelease } = data;
+                const { tag_name } = data;
                 const ghVer = semver.clean(tag_name);
                 if (semver.lt(currentVer, ghVer)) {
-                    if (!prerelease || semver.major(ghVer) === semver.major(currentVer)) {
-                        setUpdateAvailable(true);
-                    }
+                    setUpdateAvailable(true);
                 }
             }).catch(() => {});
-    });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <Router>
