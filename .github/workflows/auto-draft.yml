@@ -30,7 +30,7 @@ jobs:
             exit 1
           fi
           echo "Current version: $result"
-          $ver="v$result"
+          ver="v$result"
           if [[ $ver != $(git tag | tail -1) ]]; then
             echo "::set-output name=continue::1"
             echo "::set-output name=tag::$ver"
