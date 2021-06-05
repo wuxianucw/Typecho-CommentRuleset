@@ -5,6 +5,7 @@ use CommentRuleset\RuleCompiler;
 use CommentRuleset\RuleTranslator;
 
 define('__TYPECHO_ROOT_DIR__', '/');
+require 'mocks/Helper.php';
 require '../libs/RuleCompiler.php';
 require 'RuleGenerator.php';
 echo <<<EOF
