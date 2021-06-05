@@ -32,6 +32,8 @@ jobs:
           echo "Current version: $result"
           ver="v$result"
           if [[ $ver != $(git tag | tail -1) ]]; then
+            echo $(git tag | tail -1)
+            exit 1
             echo "::set-output name=continue::1"
             echo "::set-output name=tag::$ver"
             echo "::set-output name=title::CommentRuleset $result"
@@ -52,6 +54,8 @@ jobs:
         if: steps.check.outputs.continue == 1
         run: |
           pwd
+          exit 1
+          cd tools
           chmod +x build-frontend.sh
           ./build-frontend.sh
           cd ..
