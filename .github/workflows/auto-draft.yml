@@ -33,19 +33,19 @@ jobs:
           ver="v$result"
           git fetch --tags >/dev/null
           if [ $(git tag -l "$ver") ]; then
-            echo "This is a new version, drafting required."
-            echo "::set-output name=continue::1"
-            echo "::set-output name=tag::$ver"
-            echo "::set-output name=title::CommentRuleset $result"
-            if [[ $ver == *-* ]]; then
-              echo "::set-output name=prerelease::1"
-            else
-              echo "::set-output name=prerelease::0"
-            fi
+            echo "Tag $ver already exists. Skip."
+            echo "::set-output name=continue::0"
             exit
           fi
-          echo "Tag $ver already exists. Skip."
-          echo "::set-output name=continue::0"
+          echo "This is a new version, drafting required."
+          echo "::set-output name=continue::1"
+          echo "::set-output name=tag::$ver"
+          echo "::set-output name=title::CommentRuleset $result"
+          if [[ $ver == *-* ]]; then
+            echo "::set-output name=prerelease::1"
+          else
+            echo "::set-output name=prerelease::0"
+          fi
 
       - name: Setup Node.js environment
         if: steps.check.outputs.continue == 1
