@@ -29,12 +29,11 @@ jobs:
             echo "::error::$result"
             exit 1
           fi
-          echo "Current version: $result"
+          echo "Current version: $result."
           ver="v$result"
-          git fetch --tags
-          ghVer=$(git tag | tail -1)
-          if [[ $ver != $ghVer ]]; then
-            echo "$ghVer -> $result"
+          git fetch --tags >/dev/null
+          if [ $(git tag -l "$ver") ]; then
+            echo "This is a new version, drafting required."
             echo "::set-output name=continue::1"
             echo "::set-output name=tag::$ver"
             echo "::set-output name=title::CommentRuleset $result"
@@ -45,6 +44,7 @@ jobs:
             fi
             exit
           fi
+          echo "Tag $ver already exists. Skip."
           echo "::set-output name=continue::0"
 
       - name: Setup Node.js environment
