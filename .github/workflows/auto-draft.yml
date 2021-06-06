@@ -31,7 +31,9 @@ jobs:
           fi
           echo "Current version: $result."
           ver="v$result"
-          git fetch --tags >/dev/null
+          if ! git fetch --tags --quiet; then
+            echo "::error::Cannot fetch tags."
+          fi
           if [ $(git tag -l "$ver") ]; then
             echo "Tag $ver already exists. Skip."
             echo "::set-output name=continue::0"
