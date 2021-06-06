@@ -33,6 +33,7 @@ jobs:
           ver="v$result"
           if ! git fetch --tags --quiet; then
             echo "::error::Cannot fetch tags."
+            exit 1
           fi
           if [ $(git tag -l "$ver") ]; then
             echo "Tag $ver already exists. Skip."
