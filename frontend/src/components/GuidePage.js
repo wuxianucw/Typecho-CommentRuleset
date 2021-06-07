@@ -251,7 +251,8 @@ export default function GuidePage() {
                 <pre><code>[ uid == 1 ] : accept ! [ content ~ /https?:\/\/[a-zA-Z0-9]+\.[a-zA-Z0-9]+/ ] : review ! skip ; ;<br />{"                       ^"}</code></pre>
                 <p>直接插入目标逻辑例如 <code>[ ip == '0.0.0.0' ] : deny ! ... ;</code>，效果如下：</p>
                 <pre><code>[ uid == 1 ] : accept ! <Box color="success.main" component="span">[ ip == '0.0.0.0' ] : deny !</Box> [ content ~ /https?:\/\/[a-zA-Z0-9]+\.[a-zA-Z0-9]+/ ] : review ! skip ; <Box color="success.main" component="span">; </Box>;</code></pre>
-                <p>最后，切换回所见即所得编辑模式（可能需要一小会时间，因为需要后端解析规则），就能看到新的判断块成功插入了。</p>
+                <p>最后，切换回所见即所得编辑模式（可能需要一小会时间，因为需要后端解析规则），就能看到新的判断块成功插入了。特别注意不要忘记 <code>;</code> 的插入（上例的靠近末尾位置），判断语句必须以 <code>;</code> 结束。</p>
+                <p>接下来，让我们来系统学习 Rule 语法！</p>
             </Box>
             <Divider />
             <Box fontSize="h5.fontSize" m={1}>
@@ -259,7 +260,14 @@ export default function GuidePage() {
                 <Box color="text.secondary" fontSize="subtitle2.fontSize" component="span" m={1}>Let's Speed Up!</Box>
             </Box>
             <Box fontSize="body1.fontSize" m={1}>
-                <p>这里介绍 Rule 语法以及编译器相关……</p>
+                <p>首先解释 Rule 语法中的一些概念：</p>
+                <ul>
+                    <li>判断块：形如 <code>{'[ <name> <op> <value> ] : <then> ! <else> ;'}</code>的语法结构；</li>
+                    <li><code>{'<then>'}</code>：当条件为真时执行的动作，可以是一个具体的动作，也可以是一个判断块；</li>
+                    <li><code>{'<else>'}</code>：当条件为假时执行的动作，同理；</li>
+                    <li><code>{'<next>'}</code>：<code>{'<then>'}</code> 和 <code>{'<else>'}</code> 的统称；</li>
+                    <li>...</li>
+                </ul>
             </Box>
             <Divider />
             <Box fontSize="h5.fontSize" m={1}>
