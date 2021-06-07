@@ -1,0 +1,36 @@
+BNF of Rule
+
+<rule> ::= <judge block>
+
+<judge block> ::= "[" <condition> "]" <actions> ";"
+
+<condition> ::= <name> <op> <value>
+
+<actions> ::= ":" <next>
+            | "!" <next>
+            | ":" <next> "!" <next>
+
+<name> ::= "uid" | "nick" | "email" | "url" | "content" | "length" | "ip" | "ua"
+
+<op> ::= "==" | "!=" | "<" | ">" | "<=" | ">=" | "<-" | "~"
+
+<value> ::= <number> | <text> | <regex>
+
+<next> ::= <signal> | <judge block>
+
+<signal> ::= "accept" | "review" | "spam" | "deny" | "skip"
+
+<number> ::= <digit>
+           | <positive digit> <digits>
+
+<digits> ::= <digit>
+           | <digit> <digits>
+
+<digit> ::= "0"
+          | <positive digit>
+
+<positive digit> ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+<text> ::= ...
+
+<regex> ::= ...
