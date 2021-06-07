@@ -5,7 +5,7 @@
 
  /**
   * 随机从数组中取出一个元素
-  * 
+  *
   * @param array $array
   * @return mixed
   */
@@ -15,7 +15,7 @@ function roll($array) {
 
 /**
  * 百分概率
- * 
+ *
  * @param int $num
  * @return bool
  */
@@ -25,7 +25,7 @@ function percent($num) {
 
 /**
  * 随机字符串
- * 
+ *
  * @param int $length 长度
  * @param string $charset 字符集
  * @return string
@@ -34,7 +34,7 @@ function random_string($length, $charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij
     $size = strlen($charset);
     $res = '';
     for ($i = 0; $i < $length; $i++) {
-        $res .= $charset[mt_rand(0,$size - 1)];
+        $res .= $charset[mt_rand(0, $size - 1)];
     }
     return $res;
 }
