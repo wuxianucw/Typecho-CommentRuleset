@@ -38,7 +38,9 @@
                 return { name, ruid, remark, status, priority };
             }
             window.__pageData = {
+                version: '0.1.1',
                 apiBase: '//localhost/ty/index.php/action/manage-commentruleset',
+                monacoUrl: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.22.3/min/vs',
                 title: '评论规则集管理', // $menu->title()
                 account: ['账户', '#', '#'], // ['最后登录' | '账户', $options->adminUrl('profile.php'), $options->logoutUrl()]
                 menu: [
