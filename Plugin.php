@@ -5,7 +5,7 @@ if (!defined('__TYPECHO_ROOT_DIR__')) exit;
  *
  * @package CommentRuleset
  * @author wuxianucw
- * @version 0.1.1
+ * @version 0.2.0
  * @license GNU Affero General Public License v3.0
  * @link https://ucw.moe/
  */
@@ -15,7 +15,7 @@ class CommentRuleset_Plugin implements Typecho_Plugin_Interface {
      *
      * @var string
      */
-    const VERSION = '0.1.1';
+    const VERSION = '0.2.0';
 
     /**
      * 评论通过标志
