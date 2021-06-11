@@ -21,6 +21,7 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
+// deprecated
 export default function GuidePage() {
     const classes = useStyles();
 

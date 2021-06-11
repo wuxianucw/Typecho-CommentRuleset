@@ -17,7 +17,7 @@ import MenuList from './components/MenuList';
 
 const OverviewPage = lazy(() => import('./components/OverviewPage'));
 const EditPage = lazy(() => import('./components/EditPage'));
-const GuidePage = lazy(() => import('./components/GuidePage'));
+const MetaPage = lazy(() => import('./components/MetaPage'));
 
 const theme = createMuiTheme({
     palette: {
@@ -91,7 +91,7 @@ export default function App() {
 
                                 if (path.length < 1 || path.length > 2) return <Redirect to="/overview" />;
                                 if (path.length === 2 && path[0] !== "edit") return <Redirect to="/overview" />;
-                                if (["overview", "edit", "guide"].indexOf(path[0]) === -1) return <Redirect to="/overview" />;
+                                if (["overview", "edit", "meta"].indexOf(path[0]) === -1) return <Redirect to="/overview" />;
 
                                 const handleChange = (_, newValue) => {
                                     if (newValue === path[0]) return;
@@ -109,7 +109,7 @@ export default function App() {
                                     >
                                         <Tab label="规则总览" value="overview" />
                                         <Tab label={path.length > 1 ? `编辑规则 ${path[1]}` : "新增规则"} value="edit" />
-                                        <Tab label="配置指南" value="guide" />
+                                        <Tab label="META" value="meta" />
                                     </Tabs>
                                 );
                             }}
@@ -124,7 +124,7 @@ export default function App() {
                             }>
                                 <Route path="/overview" component={OverviewPage} />
                                 <Route path="/edit/:ruid?" component={EditPage} />
-                                <Route path="/guide" component={GuidePage} />
+                                <Route path="/meta" component={MetaPage} />
                             </Suspense>
                         </main>
                     </div>
