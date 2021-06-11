@@ -79,5 +79,5 @@ jobs:
           tag: ${{ steps.check.outputs.tag }}
           prerelease: ${{ steps.check.outputs.prerelease == 1 }}
           name: ${{ steps.check.outputs.title }}
-          artifact: "CommentRuleset.zip"
+          artifacts: "CommentRuleset.zip"
           artifactErrorsFailBuild: true
