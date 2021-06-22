@@ -53,13 +53,12 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function NameSelect({ value, onChange, readOnly, ...other }) {
+function NameSelect({ value, onChange, ...other }) {
     // ['uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua']
     return (
         <Select
             value={value}
             onChange={onChange}
-            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="uid">UID</MenuItem>
@@ -74,13 +73,12 @@ function NameSelect({ value, onChange, readOnly, ...other }) {
     );
 }
 
-function OperatorSelect({ value, isNumeric, onChange, readOnly, ...other }) {
+function OperatorSelect({ value, isNumeric, onChange, ...other }) {
     // ['==', '!=', '<', '>', '<=', '>=', '<-', '~']
     return isNumeric ? (
         <Select
             value={value}
             onChange={onChange}
-            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="==">等于</MenuItem>
@@ -94,7 +92,6 @@ function OperatorSelect({ value, isNumeric, onChange, readOnly, ...other }) {
         <Select
             value={value}
             onChange={onChange}
-            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="==">等于（全字匹配）</MenuItem>
@@ -105,13 +102,12 @@ function OperatorSelect({ value, isNumeric, onChange, readOnly, ...other }) {
     );
 }
 
-function ActionSelect({ value, onChange, readOnly, ...other }) {
+function ActionSelect({ value, onChange, ...other }) {
     // ['accept', 'review', 'spam', 'deny', 'skip']
     return (
         <Select
             value={value}
             onChange={onChange}
-            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="skip">无动作</MenuItem>
@@ -415,14 +411,14 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                     <NameSelect
                                         value={name}
                                         onChange={(event) => handleNameSwitchChange(index, event)}
-                                        readOnly={readOnly}
+                                        inputProps={{ readOnly }}
                                     />
                                     &emsp;
                                     <OperatorSelect
                                         value={operator}
                                         isNumeric={isNumeric}
                                         onChange={(event) => handleOperatorSwitchChange(index, event)}
-                                        readOnly={readOnly}
+                                        inputProps={{ readOnly }}
                                     />
                                     &emsp;
                                     {isNumeric ? (
@@ -454,7 +450,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                     <ActionSelect
                                         value={then[0]}
                                         onChange={(event) => handleActionSelectChange(index, 0, event)}
-                                        readOnly={readOnly}
+                                        inputProps={{ readOnly }}
                                     />
                                     {then[0] === "judge" && (<>
                                         &emsp;
@@ -469,7 +465,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                     <ActionSelect
                                         value={otherwise[0]}
                                         onChange={(event) => handleActionSelectChange(index, 1, event)}
-                                        readOnly={readOnly}
+                                        inputProps={{ readOnly }}
                                     />
                                     {otherwise[0] === "judge" && (<>
                                         &emsp;
