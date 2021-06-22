@@ -353,7 +353,7 @@ export default function EditPage(props) {
                         <Checkbox
                             checked={status.indexOf("uncompiled") === -1}
                             onChange={handleIsCompiledChange}
-                            disabled={saving}
+                            disabled={readOnly || saving}
                         />
                     }
                     label="编译规则"
