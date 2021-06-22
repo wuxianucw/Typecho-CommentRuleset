@@ -332,7 +332,7 @@ export default function EditPage(props) {
                 defaultRuleText={ruleText}
                 onChange={handleRuleEditorChange}
                 onNetworkError={handleRuleEditorNetworkError}
-                disabled={saving}
+                readOnly={saving}
             />
             {compileMessage.length > 0 && (
                 <MuiAlert

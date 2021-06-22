@@ -53,12 +53,13 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function NameSelect({ value, onChange, ...other }) {
+function NameSelect({ value, onChange, readOnly, ...other }) {
     // ['uid', 'nick', 'email', 'url', 'content', 'length', 'ip', 'ua']
     return (
         <Select
             value={value}
             onChange={onChange}
+            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="uid">UID</MenuItem>
@@ -73,12 +74,13 @@ function NameSelect({ value, onChange, ...other }) {
     );
 }
 
-function OperatorSelect({ value, isNumeric, onChange, ...other }) {
+function OperatorSelect({ value, isNumeric, onChange, readOnly, ...other }) {
     // ['==', '!=', '<', '>', '<=', '>=', '<-', '~']
     return isNumeric ? (
         <Select
             value={value}
             onChange={onChange}
+            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="==">等于</MenuItem>
@@ -92,6 +94,7 @@ function OperatorSelect({ value, isNumeric, onChange, ...other }) {
         <Select
             value={value}
             onChange={onChange}
+            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="==">等于（全字匹配）</MenuItem>
@@ -102,12 +105,13 @@ function OperatorSelect({ value, isNumeric, onChange, ...other }) {
     );
 }
 
-function ActionSelect({ value, onChange, ...other }) {
+function ActionSelect({ value, onChange, readOnly, ...other }) {
     // ['accept', 'review', 'spam', 'deny', 'skip']
     return (
         <Select
             value={value}
             onChange={onChange}
+            inputProps={{ readOnly }}
             {...other}
         >
             <MenuItem value="skip">无动作</MenuItem>
@@ -154,7 +158,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
 
     const onChange = props.onChange ?? (() => {});
     const onNetworkError = props.onNetworkError ?? (() => { alert("请求后端 API 失败！"); });
-    const disabled = props.disabled ?? false;
+    const readOnly = props.readOnly ?? false;
     const [editMode, setEditMode] = React.useState(props.defaultEditMode ?? 0); // 0 => 所见即所得编辑模式，1 => 规则文本编辑模式
     const [confirmDialogOpen, setConfirmDialogOpen] = React.useState(false);
     const [backdropOpen, setBackdropOpen] = React.useState(false);
@@ -377,13 +381,13 @@ const RuleEditor = React.forwardRef((props, ref) => {
 
     return (
         <>
-            <InputLabel required shrink disabled={disabled}>规则内容</InputLabel>
+            <InputLabel required shrink disabled={readOnly}>规则内容</InputLabel>
             <div style={{ marginTop: theme.spacing(1) }} />
             <Button
                 variant="outlined"
                 color={["primary", "secondary"][editMode]}
                 onClick={handleSwitchMode}
-                disabled={disabled}
+                disabled={readOnly}
             >切换到{["规则文本", "所见即所得"][editMode]}编辑模式</Button>
             <div style={{ marginTop: theme.spacing(1) }} />
             {editMode === 0 ? (
@@ -396,14 +400,14 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                 className={classes.judgeBlockLabel}
                                 style={isHighlight ? { background: "#fffdd1" } : {}}
                             >{key}</div>
-                            <div className={classes.judgeBlockContent} style={disabled ? { color: "rgba(0, 0, 0, 0.38)" } : {}}>
+                            <div className={classes.judgeBlockContent} style={readOnly ? { color: "rgba(0, 0, 0, 0.38)" } : {}}>
                                 {/* 如果 {name} {operator} {value}，那么 {then}，否则 {otherwise} */}
                                 <div>
                                     {refKey !== undefined && (<>
                                         <Button
                                             startIcon={<ArrowUpwardIcon />}
                                             onClick={() => handleHighlightButtonClick(refKey)}
-                                            disabled={disabled}
+                                            disabled={readOnly}
                                         >{refKey}</Button>
                                         &emsp;
                                     </>)}
@@ -411,14 +415,14 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                     <NameSelect
                                         value={name}
                                         onChange={(event) => handleNameSwitchChange(index, event)}
-                                        disabled={disabled}
+                                        readOnly={readOnly}
                                     />
                                     &emsp;
                                     <OperatorSelect
                                         value={operator}
                                         isNumeric={isNumeric}
                                         onChange={(event) => handleOperatorSwitchChange(index, event)}
-                                        disabled={disabled}
+                                        readOnly={readOnly}
                                     />
                                     &emsp;
                                     {isNumeric ? (
@@ -428,7 +432,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                             required
                                             type="number"
                                             margin="none"
-                                            disabled={disabled}
+                                            inputProps={{ readOnly }}
                                         />
                                     ) : (
                                         <TextField
@@ -439,9 +443,9 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                             helperText="允许多行，书写字符串时两侧无需加引号，书写正则表达式时需要使用 / 作为分隔符"
                                             margin="none"
                                             inputProps={{
-                                                style: { fontFamily: "'Fira Code', Consolas, 'Courier New', monospace" }
+                                                style: { fontFamily: "'Fira Code', Consolas, 'Courier New', monospace" },
+                                                readOnly
                                             }}
-                                            disabled={disabled}
                                         />
                                     )}
                                 </div>
@@ -450,14 +454,14 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                     <ActionSelect
                                         value={then[0]}
                                         onChange={(event) => handleActionSelectChange(index, 0, event)}
-                                        disabled={disabled}
+                                        readOnly={readOnly}
                                     />
                                     {then[0] === "judge" && (<>
                                         &emsp;
                                         <Button
                                             startIcon={<ArrowDownwardIcon />}
                                             onClick={() => handleHighlightButtonClick(then[1])}
-                                            disabled={disabled}
+                                            disabled={readOnly}
                                         >{then[1]}</Button>
                                     </>)}
                                     &emsp;
@@ -465,14 +469,14 @@ const RuleEditor = React.forwardRef((props, ref) => {
                                     <ActionSelect
                                         value={otherwise[0]}
                                         onChange={(event) => handleActionSelectChange(index, 1, event)}
-                                        disabled={disabled}
+                                        readOnly={readOnly}
                                     />
                                     {otherwise[0] === "judge" && (<>
                                         &emsp;
                                         <Button
                                             startIcon={<ArrowDownwardIcon />}
                                             onClick={() => handleHighlightButtonClick(otherwise[1])}
-                                            disabled={disabled}
+                                            disabled={readOnly}
                                         >{otherwise[1]}</Button>
                                     </>)}
                                 </div>
@@ -490,7 +494,7 @@ const RuleEditor = React.forwardRef((props, ref) => {
                     onChange={handleEditorChange}
                     onInitError={handleMonacoInitError}
                     editorWillMount={editorWillMount}
-                    options={{ readOnly: disabled, ...monacoOptions }}
+                    options={{ readOnly, ...monacoOptions }}
                 />
             )}
             <Dialog
