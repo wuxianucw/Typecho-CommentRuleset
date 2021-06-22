@@ -23,6 +23,7 @@ import LockOpenIcon from '@material-ui/icons/LockOpen';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import HighlightOffIcon from '@material-ui/icons/HighlightOff';
 import ReportProblemOutlinedIcon from '@material-ui/icons/ReportProblemOutlined';
+import VisibilityOutlinedIcon from '@material-ui/icons/VisibilityOutlined';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
@@ -417,12 +418,11 @@ export default function OverviewPage(props) {
                                             </TableCell>
                                             <TableCell align="right">{row.priority}</TableCell>
                                             <TableCell align="right" className={classes.disableVerticalPadding}>
-                                                <Tooltip title={isItemLocked ? "锁定状态下禁止编辑" : "编辑"}>
+                                                <Tooltip title={isItemLocked ? "以只读模式查看" : "编辑"}>
                                                     <span style={{ display: "inline-block" }}>
-                                                        <IconButton
-                                                            disabled={isItemLocked}
-                                                            onClick={() => handleEditClick(row.ruid)}
-                                                        ><EditIcon /></IconButton>
+                                                        <IconButton onClick={() => handleEditClick(row.ruid)}>
+                                                            {isItemLocked ? <VisibilityOutlinedIcon /> : <EditIcon />}
+                                                        </IconButton>
                                                     </span>
                                                 </Tooltip>
                                                 <Tooltip title={isItemLocked ? "解锁" : "锁定"}>

@@ -90,6 +90,7 @@ export default function EditPage(props) {
     const [isSaved, setIsSaved] = React.useState(ruid ? true : false);
     const [saving, setSaving] = React.useState(false);
     const [adjusted, setAdjusted] = React.useState(false);
+    const [readOnly, setReadOnly] = React.useState(false);
     const [[dialogOpen, dialogTitle, dialogContent, dialogButton], setDialog] = React.useState([false, "", "", ""]);
     const editorRef = React.useRef(); // 使用 editorRef.current.getRuleText() 来获取规则文本
 
@@ -104,6 +105,7 @@ export default function EditPage(props) {
                 },
                 cancelToken: source.current.token,
             }).then(({ data }) => {
+                if (data.status.indexOf("locked") !== -1) setReadOnly(true);
                 setName(data.name);
                 setRemark(data.remark);
                 setStatus(data.status);
@@ -170,7 +172,7 @@ export default function EditPage(props) {
     const updatingRUID = React.useRef("");
 
     const handleSaveButtonClick = () => {
-        if (isSaved || saving) return;
+        if (isSaved || saving || readOnly) return;
 
         let valid = true;
         if (name === "") {
@@ -279,6 +281,7 @@ export default function EditPage(props) {
                     onChange={handleNameChange}
                     inputProps={{
                         onBlur: (event) => setNameError(event.target.value === ""),
+                        readOnly
                     }}
                     required
                     error={nameError}
@@ -301,6 +304,7 @@ export default function EditPage(props) {
                     margin="normal"
                     style={{ width: "25%", marginLeft: theme.spacing(2) }}
                     disabled={saving}
+                    inputProps={{ readOnly }}
                 />
                 <div style={{ flexGrow: 1 }} />
                 <FormControlLabel
@@ -308,7 +312,7 @@ export default function EditPage(props) {
                         <Checkbox
                             checked={status.indexOf("on") !== -1}
                             onChange={handleIsEnabledChange}
-                            disabled={saving}
+                            disabled={readOnly || saving}
                         />
                     }
                     label="启用规则"
@@ -324,6 +328,7 @@ export default function EditPage(props) {
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
                 disabled={saving}
+                inputProps={{ readOnly }}
             />
             <RuleEditor
                 ref={editorRef}
@@ -332,7 +337,7 @@ export default function EditPage(props) {
                 defaultRuleText={ruleText}
                 onChange={handleRuleEditorChange}
                 onNetworkError={handleRuleEditorNetworkError}
-                readOnly={saving}
+                readOnly={readOnly || saving}
             />
             {compileMessage.length > 0 && (
                 <MuiAlert
