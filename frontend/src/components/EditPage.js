@@ -17,7 +17,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Snackbar from '@material-ui/core/Snackbar';
-import MuiAlert from '@material-ui/lab/Alert';
+import Alert from '@material-ui/lab/Alert';
+import AlertTitle from '@material-ui/lab/AlertTitle';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import useTheme from '@material-ui/core/styles/useTheme';
 import { green } from '@material-ui/core/colors';
@@ -105,7 +106,7 @@ export default function EditPage(props) {
                 },
                 cancelToken: source.current.token,
             }).then(({ data }) => {
-                if (data.status.indexOf("locked") !== -1) setReadOnly(true);
+                setReadOnly(data.status.indexOf("locked") !== -1);
                 setName(data.name);
                 setRemark(data.remark);
                 setStatus(data.status);
@@ -275,6 +276,9 @@ export default function EditPage(props) {
                 when={!isSaved}
                 message="规则尚未保存，确定要离开吗？"
             />
+            {readOnly && (
+                <Alert variant="outlined" severity="info">只读模式下无法编辑规则</Alert>
+            )}
             <FormGroup row>
                 <TextField
                     value={name}
@@ -340,12 +344,13 @@ export default function EditPage(props) {
                 readOnly={readOnly || saving}
             />
             {compileMessage.length > 0 && (
-                <MuiAlert
-                    elevation={0}
-                    variant="filled"
+                <Alert
                     severity="error"
                     style={{ marginTop: theme.spacing(1) }}
-                ><div dangerouslySetInnerHTML={{ __html: `规则编译失败：${compileMessage}` }} /></MuiAlert>
+                >
+                    <AlertTitle>规则编译失败</AlertTitle>
+                    <div dangerouslySetInnerHTML={{ __html: compileMessage }} />
+                </Alert>
             )}
             <div>
                 <FormControlLabel
@@ -372,9 +377,9 @@ export default function EditPage(props) {
                 {saving && <CircularProgress size={24} className={classes.buttonProgress} />}
             </div>
             <Snackbar open={adjusted} autoHideDuration={6000} onClose={() => setAdjusted(false)}>
-                <MuiAlert elevation={6} variant="filled" onClose={() => setAdjusted(false)} severity="warning">
+                <Alert elevation={6} variant="filled" onClose={() => setAdjusted(false)} severity="warning">
                     由于规则编译失败，规则状态已被调整。
-                </MuiAlert>
+                </Alert>
             </Snackbar>
             <Dialog
                 open={dialogOpen}
