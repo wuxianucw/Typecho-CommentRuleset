@@ -39,10 +39,10 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
     /**
      * 规则详情接口
      *
-     * GET 方式请求 `apiBase?a=ruleDetails`
-     * GET 参数 `ruid` 欲查询规则的 RUID
-     * 返回状态码 `200` 格式 JSON 规则详细信息
-     * 返回状态码 `404` 空文本 规则不存在
+     * - GET 方式请求 `apiBase?a=ruleDetails`
+     * - GET 参数 `ruid` 欲查询规则的 RUID
+     * - 返回状态码 `200` 格式 JSON 规则详细信息
+     * - 返回状态码 `404` 空文本 规则不存在
      *
      * @access public
      * @return void
@@ -82,12 +82,12 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
     /**
      * 规则翻译接口
      *
-     * POST 方式请求 `apiBase?a=translate`
-     * FormData 参数 `input` 规则文本
-     * 返回格式 JSON
-     * 返回状态码 `200` 翻译结果结构
-     * 返回状态码 `201` 编译失败错误信息
-     * 返回状态码 `204` 空文本 无需翻译
+     * - POST 方式请求 `apiBase?a=translate`
+     * - FormData 参数 `input` 规则文本
+     * - 返回格式 JSON
+     * - 返回状态码 `200` 翻译结果结构
+     * - 返回状态码 `201` 编译失败错误信息
+     * - 返回状态码 `204` 空文本 无需翻译
      *
      * @access public
      * @return void
@@ -115,17 +115,17 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
     /**
      * 保存规则接口
      *
-     * POST 方式请求 `apiBase?a=saveRule`
-     * FormData 参数 `ruid` 可选 规则 RUID 为空表示新增
-     * FormData 参数 `name` 规则名称
-     * FormData 参数 `status` 规则状态
-     * FormData 参数 `remark` 可选 规则备注
-     * FormData 参数 `priority` 规则优先级
-     * FormData 参数 `rule` 规则内容
-     * FormData 参数 `editMode` 规则编辑模式
-     * 返回状态码 `200` 格式 JSON 保存成功，包括自动调整后目前的状态以及可能的编译错误信息，还有整个规则列表
-     * 返回状态码 `201` 空文本 保存失败（未知原因）
-     * 返回状态码 `403` 空文本 参数非法
+     * - POST 方式请求 `apiBase?a=saveRule`
+     * - FormData 参数 `ruid` 可选 规则 RUID 为空表示新增
+     * - FormData 参数 `name` 规则名称
+     * - FormData 参数 `status` 规则状态
+     * - FormData 参数 `remark` 可选 规则备注
+     * - FormData 参数 `priority` 规则优先级
+     * - FormData 参数 `rule` 规则内容
+     * - FormData 参数 `editMode` 规则编辑模式
+     * - 返回状态码 `200` 格式 JSON 保存成功，包括自动调整后目前的状态以及可能的编译错误信息，还有整个规则列表
+     * - 返回状态码 `201` 空文本 保存失败（未知原因）
+     * - 返回状态码 `403` 空文本 参数非法
      *
      * @access public
      * @return void
@@ -200,11 +200,11 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
     /**
      * 删除规则接口
      *
-     * GET 方式请求 `apiBase?a=removeRules`
-     * GET 参数 `ruid` 欲删除规则的 RUID 数组
-     * 返回状态码 `200` 格式 JSON 删除后的规则列表
-     * 返回状态码 `403` 空文本 参数非法，指定规则不存在或被锁定
-     * 返回状态码 `500` 空文本 配置更改写入失败
+     * - GET 方式请求 `apiBase?a=removeRules`
+     * - GET 参数 `ruid` 欲删除规则的 RUID 数组
+     * - 返回状态码 `200` 格式 JSON 删除后的规则列表
+     * - 返回状态码 `403` 空文本 参数非法，指定规则不存在或被锁定
+     * - 返回状态码 `500` 空文本 配置更改写入失败
      *
      * @access public
      * @return void
@@ -239,12 +239,12 @@ class CommentRuleset_Action extends Typecho_Widget implements Widget_Interface_D
     /**
      * 锁定/解锁规则接口
      *
-     * GET 方式请求 `apiBase?a=lockRule`
-     * GET 参数 `ruid` 规则 RUID
-     * GET 参数 `opt` 操作类型，1 为锁定，0 为解锁
-     * 返回状态码 `200` 空文本 操作成功
-     * 返回状态码 `403` 空文本 参数非法，指定规则不存在
-     * 返回状态码 `500` 空文本 配置更改写入失败
+     * - GET 方式请求 `apiBase?a=lockRule`
+     * - GET 参数 `ruid` 规则 RUID
+     * - GET 参数 `opt` 操作类型，1 为锁定，0 为解锁
+     * - 返回状态码 `200` 空文本 操作成功
+     * - 返回状态码 `403` 空文本 参数非法，指定规则不存在
+     * - 返回状态码 `500` 空文本 配置更改写入失败
      *
      * @access public
      * @return void
