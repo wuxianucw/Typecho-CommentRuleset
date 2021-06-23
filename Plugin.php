@@ -119,6 +119,14 @@ HTML
             CommentRuleset\Logger::INFO, CommentRuleset\Logger::DEBUG, CommentRuleset\Logger::VERBOSE));
         $form->addInput($logLevel);
 
+        /** 检查更新 */
+        $checkUpdate = new Typecho_Widget_Helper_Form_Element_Select('checkUpdate', array(
+            0 => '关闭',
+            1 => '开启',
+        ), 1, _t('检查更新'), _t('本参数用于控制评论规则集管理页面是否进行插件本体的检查更新，以及是否显示更新提示。'));
+        $checkUpdate->addRule('enum', _t('必须为“检查更新”指定合法的值'), array(0, 1));
+        $form->addInput($checkUpdate);
+
         /** Monaco 加载来源 */
         $monaco = new Typecho_Widget_Helper_Form_Element_Select('monaco', array(
             0 => 'jsDelivr',

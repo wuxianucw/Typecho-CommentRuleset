@@ -19,8 +19,9 @@ if ($user->logged > 0) {
     $logged = new Typecho_Date($user->logged);
     $logged = '最后登录: ' . $logged->word();
 } else $logged = $user->screenName;
+$pluginOpt = $options->plugin('CommentRuleset');
 $pageData = array(
-    'version' => CommentRuleset_Plugin::VERSION,
+    'version' => (isset($pluginOpt->checkUpdate) && intval($pluginOpt->checkUpdate) === 1) ? CommentRuleset_Plugin::VERSION : false,
     'apiBase' => $options->index . '/action/manage-commentruleset',
     'sourceBase' => $options->rootUrl . '/usr/plugins/CommentRuleset/',
     'monacoUrl' => CommentRuleset_Plugin::getMonacoUrl(),
