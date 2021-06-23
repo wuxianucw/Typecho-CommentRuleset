@@ -61,7 +61,7 @@ class RuleCompiler {
                     if ($line[$i] == '[') { // 读到 Judge 开始的 Token
                         if ($reading != '' || $node->pos == 0) // 一个 Judge 之前不能有字面量，同时这个 Judge 也不应该位于另一个 Judge 的条件块中
                             throw new Exception('解析时遇到了意外的 <code>' . htmlspecialchars($line[$i]) . '</code>。');
-                        $method = $node->pos == 1 ? 'then' : 'else'; // 处理分支
+                        $method = $node->pos == 1 ? 'then' : 'else_'; // 处理分支
                         $child = new Judge();
                         $node->$method($child);
                         $node = $child;
@@ -83,7 +83,7 @@ class RuleCompiler {
                             throw new Exception('解析时遇到了意外的 <code>:</code>。');
                         $node->pos = 1; // 设置标志为处理 then 分支
                     } elseif ($line[$i] == '!') { // 读到 Judge else 开始的 Token (*) 还可能是运算符开始的 Token
-                        if (!$node instanceof Judge || $node->else != null || $node->pos == 2) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
+                        if (!$node instanceof Judge || $node->else_ != null || $node->pos == 2) // 当前节点必须是一个未设置 then 的 Judge，但 Token 前可能还有一个 signal 作为前一个分支的内容
                             throw new Exception('解析时遇到了意外的 <code>!</code>。');
                         if ($node->pos == 0 && $node->name == null) { // 此时这是一个运算符开始的 Token
                             if ($reading == '') throw new Exception('解析时遇到了意外的 <code>!</code>。');
@@ -106,7 +106,7 @@ class RuleCompiler {
                         if (!$node instanceof Judge || $node->pos == 0) // 当前节点必须是一个有分支的 Judge
                             throw new Exception('解析时遇到了意外的 <code>;</code>。');
                         if ($reading != '') { // 处理前一个分支中的 signal
-                            $method = $node->pos == 1 ? 'then' : 'else';
+                            $method = $node->pos == 1 ? 'then' : 'else_';
                             if ($node->$method != null) throw new Exception('解析时遇到了无法识别的结构。');
                             $child = new Value();
                             $child->set($reading);
@@ -211,7 +211,7 @@ class RuleCompiler {
                 $result .= $dfs($node->judge, $translator);
             } elseif ($node instanceof Judge) {
                 $result .= $dfs($node->then, $translator);
-                $result .= $dfs($node->else, $translator);
+                $result .= $dfs($node->else_, $translator);
             }
             $result .= $translator->nodeEndToken($node); // Translator::nodeEndToken() 钩子
             if (!$translator->leaveNode($node)) return ''; // Translator::leaveNode() 钩子
@@ -513,7 +513,7 @@ class Judge extends ASTNode {
      * @access public
      * @var mixed
      */
-    public $else;
+    public $else_;
 
     /**
      * 标志量
@@ -529,7 +529,7 @@ class Judge extends ASTNode {
         $this->optr = null;
         $this->target = null;
         $this->then = null;
-        $this->else = null;
+        $this->else_ = null;
         $this->pos = 0;
     }
 
@@ -538,9 +538,9 @@ class Judge extends ASTNode {
         $this->then = $node;
     }
 
-    public function else($node) {
+    public function else_($node) {
         $node->parent = $this;
-        $this->else = $node;
+        $this->else_ = $node;
     }
 
     public function name($name) {
@@ -560,7 +560,7 @@ class Judge extends ASTNode {
         return $this->name != ''
             && $this->optr != null
             && $this->target != null
-            && ($this->then != null || $this->else != null);
+            && ($this->then != null || $this->else_ != null);
     }
 
     public function matchType() {
@@ -804,7 +804,7 @@ class RuleTranslator extends Translator {
         $result = '';
         if ($node->parent instanceof Judge) { // 对于上级节点是 Judge 的情况，需要添加前缀
             if ($node === $node->parent->then) $result .= ' : ';
-            elseif ($node === $node->parent->else) $result .= ' ! ';
+            elseif ($node === $node->parent->else_) $result .= ' ! ';
         }
         if ($node instanceof Judge) {
             if ($node->target instanceof Regex) $target = $node->target->toString(); // 此时需要一个不在引号内的正则
@@ -828,7 +828,7 @@ class RuleTranslator extends Translator {
 class PhpTranslator extends Translator {
     public function nodeStartToken($node) {
         $result = '';
-        if ($node->parent instanceof Judge && $node === $node->parent->else) $result .= ' } else { ';
+        if ($node->parent instanceof Judge && $node === $node->parent->else_) $result .= ' } else { ';
         if ($node instanceof Root) {
             $result .= "<?php\nif (!defined('__TYPECHO_ROOT_DIR__')) exit;\n"; // 文件头
         } elseif ($node instanceof Judge) {
@@ -924,7 +924,7 @@ class JsonTranslator extends Translator {
                 $flag = "#{$this->count}";
                 $parent_flag = end($this->flags); // 从栈中取出父节点 flag
                 if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = $flag;
-                elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = $flag;
+                elseif ($node === $node->parent->else_) $this->json[$parent_flag]['else'] = $flag;
             }
             if ($node->target->type == 'number') $target = $node->target->value; // 不进行类型转换以保证其在生成的 JSON 中不被转为文本
             else $target = $node->target->toString();
@@ -941,7 +941,7 @@ class JsonTranslator extends Translator {
         } elseif ($node instanceof Value) {
             $parent_flag = end($this->flags);
             if ($node === $node->parent->then) $this->json[$parent_flag]['then'] = strval($node);
-            elseif ($node === $node->parent->else) $this->json[$parent_flag]['else'] = strval($node);
+            elseif ($node === $node->parent->else_) $this->json[$parent_flag]['else'] = strval($node);
         }
         return '';
     }
