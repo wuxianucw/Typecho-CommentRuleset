@@ -58,7 +58,7 @@ function EnhancedTableHead(props) {
                     <Tooltip key={headCell.id} title={headCell.tooltip}>
                         <TableCell
                             align={headCell.numeric ? 'right' : 'left'}
-                            padding={headCell.disablePadding ? 'none' : 'default'}
+                            padding={headCell.disablePadding ? 'none' : 'normal'}
                         >
                             {headCell.label}
                         </TableCell>
@@ -67,7 +67,7 @@ function EnhancedTableHead(props) {
                     <TableCell
                         key={headCell.id}
                         align={headCell.numeric ? 'right' : 'left'}
-                        padding={headCell.disablePadding ? 'none' : 'default'}
+                        padding={headCell.disablePadding ? 'none' : 'normal'}
                     >
                         {headCell.label}
                     </TableCell>
@@ -232,11 +232,11 @@ export default function OverviewPage(props) {
         setSelected(newSelected);
     };
 
-    const handleChangePage = (_, newPage) => {
+    const handlePageChange = (_, newPage) => {
         setPage(newPage);
     };
 
-    const handleChangeRowsPerPage = (event) => {
+    const handleRowsPerPageChange = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
@@ -454,8 +454,8 @@ export default function OverviewPage(props) {
                     nextIconButtonText="下一页"
                     labelRowsPerPage="每页规则数："
                     labelDisplayedRows={({ from, to, count }) => `${count} 条中的第 ${from} 至 ${to} 条`}
-                    onChangePage={handleChangePage}
-                    onChangeRowsPerPage={handleChangeRowsPerPage}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleRowsPerPageChange}
                 />
             </Paper>
             <Dialog

@@ -7,8 +7,7 @@ import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Fade from '@material-ui/core/Fade';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { darken, makeStyles } from '@material-ui/core/styles';
-import { MuiThemeProvider, createMuiTheme } from '@material-ui/core';
+import { darken, makeStyles, ThemeProvider, createTheme } from '@material-ui/core/styles';
 import { blue, pink } from '@material-ui/core/colors';
 
 import PluginAppBar from './components/PluginAppBar';
@@ -19,7 +18,7 @@ const OverviewPage = lazy(() => import('./components/OverviewPage'));
 const EditPage = lazy(() => import('./components/EditPage'));
 const MetaPage = lazy(() => import('./components/MetaPage'));
 
-const theme = createMuiTheme({
+const theme = createTheme({
     palette: {
         primary: {
             main: blue[700],
@@ -75,7 +74,7 @@ export default function App() {
 
     return (
         <Router>
-            <MuiThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
                 <div className={classes.root}>
                     <CssBaseline />
                     <PluginAppBar onMenuButtonClick={handleDrawerToggle} updateAvailable={updateAvailable} />
@@ -129,7 +128,7 @@ export default function App() {
                         </main>
                     </div>
                 </div>
-            </MuiThemeProvider>
+            </ThemeProvider>
         </Router>
     );
 }
